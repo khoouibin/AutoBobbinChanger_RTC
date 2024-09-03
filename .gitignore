@@ -1,0 +1,8 @@
+# ignore file type.
+*.o
+
+# ignore folder. 
+.generated_files/
+ABC_RTC.X/build/
+ABC_RTC.X/disassembly/
+ABC_RTC.X/dist/
