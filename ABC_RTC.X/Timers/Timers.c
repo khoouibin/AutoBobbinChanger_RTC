@@ -9,6 +9,8 @@
 #include "RTC_Control.h"
 #include "Ons_General.h"
 #include "xc.h"
+#include "usb_app.h"
+
 // #include "usb.h"
 // #include "usb_function_generic.h"
 // #include "USBComm.h"
@@ -73,6 +75,8 @@ void __attribute__((interrupt, no_auto_psv)) _T9Interrupt(void)
     Tickx1ms++;
     Tickx1s_Flag++;
     USBTimer_1msTick++;
+
+    BL_USB_Tx_1mISR_Set();
 
     /*
     if ( USBTimer_1msTick >= USBTimer_TimeMode )

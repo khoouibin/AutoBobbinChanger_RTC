@@ -10,23 +10,13 @@
 #include "Timers.h"
 #include "GenericTypeDefs.h"
 #include "Ons_General.h"
-#include "Msg_Prot.h"
-
-//USB includes
-#include "usb_function_generic.h"
-#include "usb.h"
-
-//USBComm includes
-#include "USBComm.h"
-
-//RTC_Low_Level includes
 #include "RTC_IOports.h"
 #include "IO_Control.h"
 #include "IO_Entity.h"
 
 #include "pps.h"
-
 #include "RTC_Control.h"
+#include "usb_app.h"
 
 /** CONFIGURATION **************************************************/
 // 150729 add Macros for Configuration Fuse Registers as below
@@ -105,134 +95,16 @@ int uart2RX_flag = 0;
 int main(void)
 {
     RTC_Control_State_t Is_Exit_RTC_Control = RTC_CONTROL_STATE_UNDEFINE;
-    // RTC_Control_Error_t                         ret_val;
     Initialize_System();
     Initialize_Communication_Modules();
-
-//    Timer_t led_wink = {.time_k.u32 = 0, .time_k_1.u32 = 0, .time_period.u32 = 25, .timer_overflow = -1};
-//    Timer_t led_wink2 = {.time_k.u32 = 0, .time_k_1.u32 = 0, .time_period.u32 = 100, .timer_overflow = -1};
-//    Timer_t led_wink3 = {.time_k.u32 = 0, .time_k_1.u32 = 0, .time_period.u32 = 200, .timer_overflow = -1};
-
-    Is_Exit_RTC_Control =  RTC_Control_Main();
+    Is_Exit_RTC_Control = RTC_Control_Main();
     if (Is_Exit_RTC_Control == RTC_CONTROL_RESET)
     {
-        //reset pic.
-        
+        // reset pic.
     }
-
-    // set default value
-//    RTC_Control_State = RTC_CONTROL_NOT_INITIALIZED;
-//    int entity_val = 0;
-//    while (Is_Exit_RTC_Control == 0)
-//    {
-//        switch (RTC_Control_State)
-//        {
-//        case RTC_CONTROL_STATE_READY:
-//            // ret_val = RTC_Control_Handle_Ready();
-//            break;
-//
-//        case RTC_CONTROL_STATE_RUN:
-//            // ret_val = RTC_Control_Handle_Run();
-//            break;
-//
-//        case RTC_CONTROL_STATE_HOME:
-//            // ret_val = RTC_Control_Handle_Home();
-//            break;
-//
-//        case RTC_CONTROL_STATE_DIAG_ACT:
-//            // ret_val = RTC_Control_Handle_Diag_Act();
-//            break;
-//
-//        case RTC_CONTROL_RESET:
-//            Is_Exit_RTC_Control = 1;
-//            break;
-//
-//        case RTC_CONTROL_NOT_INITIALIZED:
-//            // ret_val = RTC_Control_Handle_Init();
-//            led_wink.time_k.u32 = SysTimer_GetTimeInMiliSeconds();
-//            led_wink.timer_overflow = GetTimerPeriod(led_wink.time_k.u32, &led_wink.time_k_1.u32, led_wink.time_period.u32);
-//            if (led_wink.timer_overflow == 0)
-//            {
-//                LATHbits.LATH0 = !LATHbits.LATH0; // if LED continuous wrinkle, MCU alive. READY_LAMP
-//                led_wink.timer_overflow = 0;
-//                // Number_to_Display_Data(1234);
-//            }
-//
-//            led_wink2.time_k.u32 = SysTimer_GetTimeInMiliSeconds();
-//            led_wink2.timer_overflow = GetTimerPeriod(led_wink2.time_k.u32, &led_wink2.time_k_1.u32, led_wink2.time_period.u32);
-//            if (led_wink2.timer_overflow == 0)
-//            {
-//                IO_Toggle(IOP_ZA2_PISTON_ID);
-//                led_wink2.timer_overflow = 0;
-//                // Number_to_Display_Data(1234);
-//            }
-//            
-//            led_wink3.time_k.u32 = SysTimer_GetTimeInMiliSeconds();
-//            led_wink3.timer_overflow = GetTimerPeriod(led_wink3.time_k.u32, &led_wink3.time_k_1.u32, led_wink3.time_period.u32);
-//            if (led_wink3.timer_overflow == 0)
-//            {
-//                IO_Toggle(IOP_ZA2_PISTON_ID);
-//                entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
-//                if (entity_val == 0)
-//                    IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY,1);
-//                else
-//                    IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY,0);
-//                led_wink3.timer_overflow = 0;
-//                // Number_to_Display_Data(1234);
-//            }           
-//            break;
-//
-//        default:
-//            // RTC_MSGMgr_Send_Error( MSG_PROT_UNKNOWN_STATE_ERROR , "Unknown state - exit program." );//send error message
-//            // exit_flag = 1;
-//            break;
-//        }
-//        // if (uart1RX_flag == 1)
-//        // {
-//        //     Delay1usX(2); // can't too fast to sand RX_data
-//        //     sendUART2String(uart1RXBuffer, 8);
-//        //     // Clear Buffler
-//        //     memset(uart1RXBuffer, 0, UART_BUFFER_SIZE);
-//        //     uart1RX_flag = 0;
-//        // }
-//        // if (uart2RX_flag == 1)
-//        // {
-//        //     Delay1usX(2); // can't too fast to sand RX_data
-//        //     sendUART1String(uart2RXBuffer, 8);
-//        //     // Clear Buffler
-//        //     memset(uart2RXBuffer, 0, UART_BUFFER_SIZE);
-//        //     uart2RX_flag = 0;
-//        // }
-//        // if (!IO_Get(IOP_BOOST_BUTTON_ID))
-//        // {
-//        //     Delay1usX(10);
-//        //     if (!IO_Get(IOP_BOOST_BUTTON_ID))
-//        //     {
-//        //         IO_Toggle(IOP_YA1_PISTON_ID);
-//        //         sendUART2String(uart2GetPos, 8);
-//        //         Delay1usX(10);
-//        //         while (!IO_Get(IOP_BOOST_BUTTON_ID))
-//        //             ;
-//        //     }
-//        // }
-//    }
     return 0;
 }
 
-// ---------------------------------------------------------------------------
-//  Function name		: Initialize_System
-//
-//  Purpose				: Centralize initialization routine 
-//
-//  Inputs				: 
-//
-//  Outputs				: 
-//
-//  Returns				: 
-//
-//  Description			: 
-//
-// ---------------------------------------------------------------------------
 static void Initialize_System( void )
 {
     PLLFBD = 58;                   		//M=60
@@ -273,27 +145,14 @@ static void Initialize_System( void )
 	//IO_Init_PPS();				//151022 Adam added
 }//end InitializeSystem
 
-// ---------------------------------------------------------------------------
-//  Function name		: Initialize_Communication_Modules
-//
-//  Purpose				: Initialize all RTC's communication modules
-//
-//  Inputs				: 
-//
-//  Outputs				: 
-//
-//  Returns				: 
-//
-//  Description			: 
-//
-// ---------------------------------------------------------------------------
 static void Initialize_Communication_Modules( void )
 {
     ClearIntrflags();
     Init_Timers();
     UART1_module_init();
     UART2_module_init();
-    //USBComm_Init();
+    USBDeviceInit();
+    USBDeviceAttach();
 }
 
 static void UART1_module_init(void)
@@ -502,86 +361,3 @@ void __attribute__((__interrupt__, auto_psv)) _U2RXInterrupt(void)
     IFS1bits.U2RXIF = 0;
 }
 
-// ---------------------------------------------------------------------------
-//  Function name		: RTC_MSGMgr_Handle_Received_Messages
-//
-//  Purpose				: Check the input messages and decide which event should be performed.
-//
-//  Inputs				: Control_state - indicates the RTC control state
-//                        Action_Data - Received messages data for control actions 
-//
-//  Outputs				: 
-//
-//  Returns				: RTC_Control_Event_t - which event should be performed.
-//
-//  Description			: 
-//
-// ---------------------------------------------------------------------------
-RTC_Control_Event_t RTC_MSGMgr_Handle_Received_Messages( RTC_Control_State_t Control_State , ONS_BYTE* Rcv_Message )
-{
-    int                                         usb_status;
-    unsigned int                                msg_id;
-	unsigned int                                new_msg = 0;
-    RTC_Control_Event_t                         event_val;
-       
-    //default value
-    event_val = CONTROL_NO_EVENT;
-            
-    //check USB layer status
-    USBComm_Get_Module_State( &usb_status );
-    
-    if ( usb_status != USBCOMM_ERROR_STATE )
-    {
-        //check if there is a new message 
-        if( !USBComm_Is_Rx_Buffer_Empty() )
-        {
-            if( !Msg_Prot_Receive_Next_Message( Rcv_Message , &msg_id , &new_msg ) )
-            {
-                if( new_msg )
-                {
-                    switch( msg_id )
-                    {
-                        case MSG_PROT_RTC_RESET_CMD:
-                            
-                            event_val = CONTROL_PERFORM_RESET;
-                            
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        //No USBCommunication FATAL ERROR!!!
-        event_val = CONTROL_FATAL_ERROR;
-    }
-    
-    return event_val;
-}
-
-// static RTC_Control_Error_t RTC_Control_Handle_Events(RTC_Control_Event_t Event_Val)
-// {
-//     char error_description[MSG_PROT_RTC_ERROR_DATA_SIZE];
-//     RTC_Control_Error_t ret_val;
-//     ret_val = RTC_CONTROL_OK;
-//     switch (Event_Val)
-//     {
-//     case CONTROL_NO_EVENT:
-//         break;
-
-//     case CONTROL_PERFORM_RESET:
-//         RTC_Control_State = RTC_CONTROL_RESET;
-//         break;
-
-//     case CONTROL_FATAL_ERROR:
-//         ret_val = RTC_CONTROL_ERROR_USB_COMM;
-//         break;
-
-//     default:
-//         snprintf(error_description, sizeof(error_description), "Received unknown event.");
-//         ret_val = RTC_CONTROL_ILLEGAL_REQUEST;
-//         break;
-//     }
-//     return ret_val;
-// }

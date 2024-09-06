@@ -1,0 +1,383 @@
+#include <xc.h>
+#include "usb_app.h"
+//#include "display_LED7.h"
+#include "Ons_General.h"
+//#include "NVM_func.h"
+//#include "HardwareProfile_dsPIC33EP512MU810_PIM.h"
+#include "RTC_IOports.h"
+#include "IO_Control.h"
+#include "IO_Entity.h"
+#include <stdio.h>
+#include <stdbool.h>
+
+unsigned char USB_RxBuf[MESSAGE_MAX];
+
+USB_Transaction_State_t TxTransState = {0};
+USB_Transaction_State_t RxTransState = {0};
+
+volatile USB_HANDLE USBOutHandle;
+volatile USB_HANDLE USBInHandle;
+char debug_str[48];
+
+void __attribute__((interrupt, no_auto_psv)) _USB1Interrupt(void)
+{
+    USBDeviceTasks();
+    USB_RxBulkBuffer_Get_From_Bus();
+}
+
+void USB_DeviceInitialize(void)
+{
+    USBInHandle = 0;
+    // enable the HID endpoint
+    USBEnableEndpoint(CUSTOM_DEVICE_HID_EP, USB_IN_ENABLED | USB_OUT_ENABLED | USB_HANDSHAKE_ENABLED | USB_DISALLOW_SETUP);
+    USBOutHandle = (volatile USB_HANDLE)HIDRxPacket(CUSTOM_DEVICE_HID_EP, (uint8_t *)&USB_RxBuf[0], MESSAGE_MAX);
+    USB_TransStateInit();
+}
+
+void USB_TransStateInit(void)
+{
+    TxTransState.Init = 1;
+    TxTransState.Mutex = 0;
+    TxTransState.Stuck = 0; // effective.
+    TxTransState.Ptr_buff = -1;
+    TxTransState.Ptr_comp = -1;
+
+    RxTransState.Init = 1;
+    RxTransState.Mutex = 0;
+    RxTransState.Stuck = 0;
+    RxTransState.Ptr_buff = -1;
+    RxTransState.Ptr_comp = -1;
+
+    LATHbits.LATH10 = 0;
+}
+
+char USB_RxBulkBuffer_Get_From_Bus(void)
+{
+    int i_RxLength = 0;
+    if (USBGetDeviceState() < CONFIGURED_STATE)
+    {
+        return -1;
+    }
+
+    if (HIDRxHandleBusy(USBOutHandle) == false)
+    {
+        if (RxTransState.Ptr_buff == -1)
+            RxTransState.Ptr_buff = 0;
+
+        i_RxLength = USBHandleGetLength(USBOutHandle);
+        USBOutHandle = HIDRxPacket(CUSTOM_DEVICE_HID_EP, (uint8_t *)&USB_RxBuf[0], MESSAGE_MAX);
+
+        memcpy(RxTransState.Buff[(unsigned char)RxTransState.Ptr_buff], USB_RxBuf, MESSAGE_MAX);
+        RxTransState.MsgSize[(unsigned char)RxTransState.Ptr_buff] = i_RxLength;
+
+        RxTransState.Ptr_buff++;
+        RxTransState.Ptr_buff &= 0x07;
+
+        if ((RxTransState.Ptr_buff ^ RxTransState.Ptr_comp) == 0)
+            RxTransState.Stuck = 1;
+
+        return 0;
+    }
+
+    // note:
+    // 1. USBHandleGetLength must in front of HIDRxPacket.
+    //    and HIDRxPacket leng(read out length) should be maximum.
+    //    to access usb_handle once, that will changes state of usb_handle.
+    //    to use usb_handle must very carefully.
+    // 2. if receive message completed, the usb_handle will change state
+    //    ( HIDRxHandleBusy=false ) and must to access data as soon as possible.
+    //    then after access data, the usb_handle change state to busy
+    //    ( HIDRxHandleBusy=busy ) untill to next next message interrupt.
+    //    so that, cannot do this, that will cause program crash:
+    //    while(1){
+    //      if(HIDRxHandleBusy(USBOutHandle) == false)
+    //          break;
+    //    }
+    //
+    return 1;
+}
+
+char read_rxbuf(unsigned char *var)
+{
+    *var = USB_RxBuf[0];
+    return 0;
+}
+
+char USB_Msg_To_TxBulkBuffer(ptr_usb_msg_u8 send_msg, unsigned char msg_size) // FirstIn
+{
+    char *ptr_TxBuff;
+    ptr_TxBuff = &TxTransState.Ptr_buff;
+
+    if (TxTransState.Ptr_buff == -1)
+    {
+        TxTransState.Ptr_buff = 0;
+        TxTransState.Ptr_comp = 0;
+    }
+
+    memcpy(TxTransState.Buff[(unsigned char)TxTransState.Ptr_buff], send_msg, msg_size);
+    TxTransState.MsgSize[(unsigned char)TxTransState.Ptr_buff] = msg_size;
+    TxTransState.Ptr_buff++;
+    TxTransState.Ptr_buff &= 0x07;
+
+    if ((TxTransState.Ptr_buff ^ TxTransState.Ptr_comp) == 0)
+        TxTransState.Stuck = 1;
+    return 0;
+}
+
+char USB_TxBulkBuffer_To_Bus(void) // FirstOut
+{
+    char tx_ptr = TxTransState.Ptr_comp;
+
+    if (TxTransState.Init != 1)
+        return -1;
+
+    if ((TxTransState.Ptr_buff ^ TxTransState.Ptr_comp) == 0)
+        return 1;
+
+    if (BL_USB_TxMutex_Get() == 1)
+        return 2; // usb data transmit, need to wait.
+
+    if (TxTransState.Stuck == 1)
+    {
+        LATHbits.LATH10 = 1;
+        return -2; // host usb stuck. need reset usb.
+    }
+    if (!HIDTxHandleBusy(USBInHandle))
+    {
+        USBInHandle = HIDTxPacket(CUSTOM_DEVICE_HID_EP, (uint8_t *)&TxTransState.Buff[(unsigned char)tx_ptr][0], TxTransState.MsgSize[(unsigned char)tx_ptr]);
+        // BL_USB_TxMutex_Set();
+        TxTransState.Ptr_comp++;
+        TxTransState.Ptr_comp &= 0x07;
+    }
+    return 0;
+}
+
+void BL_USB_Tx_1mISR_Set(void)
+{
+    TxTransState.flag_ISR = 1;
+}
+
+void BL_USB_Tx_1mISR_Clr(void)
+{
+    TxTransState.flag_ISR = 0;
+}
+
+bool BL_USB_Tx_1mISR_Get(void)
+{
+    return TxTransState.flag_ISR;
+}
+
+void BL_USB_TxMutex_Set(void)
+{
+    TxTransState.Mutex = 1;
+}
+
+void BL_USB_TxMutex_Clr(void)
+{ // cannot do this function, lead to checksum error.
+    if (TxTransState.Mutex == 1)
+    {
+        TxTransState.Mutex = 0;
+        TxTransState.Ptr_comp++;
+        TxTransState.Ptr_comp &= 0x07;
+    }
+}
+
+bool BL_USB_TxMutex_Get(void)
+{
+    return TxTransState.Mutex;
+}
+
+void BL_USB_Rx_4mISR_Set(void)
+{
+    static unsigned char inc_4ms = 0;
+
+    inc_4ms++;
+    inc_4ms &= 1;
+    if (inc_4ms == 0)
+        RxTransState.flag_ISR = 1;
+}
+
+void BL_USB_Rx_4mISR_Clr(void)
+{
+    RxTransState.flag_ISR = 0;
+}
+
+bool BL_USB_Rx_4mISR_Get(void)
+{
+    return RxTransState.flag_ISR;
+}
+
+/*
+void BL_USB_RxMutex_Set(void)
+{
+    RxTransState.Mutex=1;
+}
+
+void BL_USB_RxMutex_Clr(void)
+{
+    Nop();
+}
+
+bool BL_USB_RxMutex_Get(void)
+{
+    return RxTransState.Mutex;
+}
+*/
+char USB_Msg_From_RxBuffer(usb_msg_u8 *msg_cmd, unsigned char *msg_size)
+{
+    char res = -1;
+    char *ptr_RxBuff;
+    ptr_RxBuff = &RxTransState.Ptr_comp;
+
+    if (RxTransState.Init != 1)
+    {
+        res = -1;
+        return res;
+    }
+    if ((RxTransState.Ptr_buff ^ RxTransState.Ptr_comp) == 0)
+    {
+        res = 1;
+        return res;
+    }
+    if (RxTransState.Ptr_buff != -1 && RxTransState.Ptr_comp == -1)
+    {
+        RxTransState.Ptr_comp = 0;
+        res = -2;
+        return res;
+    }
+	memcpy(msg_cmd, (ptr_usb_msg_u8)RxTransState.Buff[(unsigned char)*ptr_RxBuff], MESSAGE_MAX);
+    *msg_size = RxTransState.MsgSize[(unsigned char)*ptr_RxBuff];
+    RxTransState.Ptr_comp++;
+    RxTransState.Ptr_comp &= 0x07;
+    res = 0;
+    return res;
+}
+
+bool USB_Msg_Parser(USB_Task_msg_t* task_msg)
+{
+    char neg_msg[60];
+    usb_msg_u8 msg[MESSAGE_MAX];
+    USB_Task_msg_t* p_taskmsg;
+    unsigned char msg_length;   
+    bool b_new_msg = false;
+    unsigned char nrc_res;
+    char msg_res;
+    p_taskmsg = (USB_Task_msg_t*)msg;    
+    msg_res = USB_Msg_From_RxBuffer(msg, &msg_length);
+    if (msg_res == 0)
+    {
+        nrc_res = Is_USB_Msg_NegResponse(p_taskmsg);
+        if (nrc_res == AuxBL_POSITIVE)
+        {
+           memcpy(task_msg, (usb_msg_u8*)msg, MESSAGE_MAX);
+           b_new_msg = true;
+        }
+        else
+        {
+            snprintf(neg_msg, 60, "negative message:%s","data out of range");
+            USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
+        }
+    }
+    return b_new_msg;
+}
+
+unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t* task_msg)
+{
+    unsigned char res_code = AuxBL_POSITIVE;
+    if (task_msg->cmd_id == AuxBL_NOP)
+    {
+        if (task_msg->sub_func == 0x55 || task_msg->sub_func == 0xaa)
+        {
+            res_code = AuxBL_POSITIVE;
+        }            
+        else
+        {
+            res_code = AuxBL_NRC_DATA_OUTRANGE;
+        }
+    }
+    else
+         res_code = AuxBL_NRC_CMD_NOT_FOUND;
+    return res_code;
+}
+
+char USB_NegResp(unsigned char cmd_id, unsigned char neg_code, char* strmsg)
+{
+    USB_NegResponse_msg_t neg_resp;
+    memset(neg_resp.data, 0, 60);
+    neg_resp.resp_id = AuxBL_Negative_Response;
+    neg_resp.cmd_id = cmd_id;    
+    neg_resp.neg_code = neg_code;
+    neg_resp.ignore = 0xff;
+    memcpy(neg_resp.data, strmsg, 60);
+    USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&neg_resp, 64);
+    return 0;
+}
+
+char Cal_Segment_Checksum(unsigned char select_seg, unsigned int *checksum)
+{
+    // select_seg: 0 -> general segment.
+    //             1 -> auxiliary segment.
+
+    unsigned long begin_addr, end_addr;
+    U16_t lo_word, hi_word, sum_word, checksum_word;
+    U32_t addr;
+
+    if (select_seg > 2)
+        return -1;
+
+    if (select_seg == 0)
+    {
+        begin_addr = 0;
+        end_addr = FLASH_ADDR_GEN_END;
+    }
+    else if (select_seg == 1)
+    {
+        begin_addr = FLASH_ADDR_AUX_START;
+        end_addr = FLASH_ADDR_AUX_END;
+    }
+
+    addr.u32 = begin_addr;
+    sum_word.u16 = 0;
+    checksum_word.u16 = (unsigned int)ADDR_MASK;
+    while (addr.u32 < end_addr)
+    {
+        TBLPAG = addr.word[1];
+        lo_word.u16 = __builtin_tblrdl(addr.word[0]);
+        hi_word.u16 = __builtin_tblrdh(addr.word[0]);
+        sum_word.u16 += lo_word.u16;
+        sum_word.u16 += hi_word.u16;
+        addr.u32 += 2;
+    }
+    checksum_word.u16 -= sum_word.u16;
+    checksum_word.u16 += 1;
+    *checksum = checksum_word.u16;
+    return 0;
+}
+
+//int BL_Set_ConfigReg_RSTPRI(unsigned long addr, unsigned char config_reg)
+//{
+//    ConfigRegTmp_FICD.addr = addr;
+//    ConfigRegTmp_FICD.value = config_reg;
+//    return 0;
+//}
+//
+//int BL_Get_ConfigReg_RSTPRI(unsigned long *addr, unsigned char *config_reg)
+//{
+//    *addr = ConfigRegTmp_FICD.addr;
+//    *config_reg = ConfigRegTmp_FICD.value;
+//    return 0;
+//}
+//
+//int BL_Set_ConfigReg_GSS(unsigned long addr, unsigned char config_reg)
+//{
+//    ConfigRegTmp_FGC.addr = addr;
+//    ConfigRegTmp_FGC.value = config_reg;
+//    return 0;
+//}
+//
+//int BL_Get_ConfigReg_GSS(unsigned long *addr, unsigned char *config_reg)
+//{
+//    *addr = ConfigRegTmp_FGC.addr;
+//    *config_reg = ConfigRegTmp_FGC.value;
+//    return 0;
+//}

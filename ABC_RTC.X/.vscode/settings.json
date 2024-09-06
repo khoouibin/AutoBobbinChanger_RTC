@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "usb_app.h": "c",
+        "usb_device.h": "c",
+        "usb_device_hid.h": "c"
+    }
+}

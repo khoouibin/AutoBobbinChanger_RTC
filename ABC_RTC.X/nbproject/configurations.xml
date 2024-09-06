@@ -23,27 +23,25 @@
       <logicalFolder name="Timers" displayName="Timers" projectFiles="true">
         <itemPath>Timers/Timers.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="USB" displayName="USB" projectFiles="true">
-        <itemPath>USB/usb.h</itemPath>
-        <itemPath>USB/usb_ch9.h</itemPath>
-        <itemPath>USB/usb_common.h</itemPath>
-        <itemPath>USB/usb_config.h</itemPath>
-        <itemPath>USB/usb_device.h</itemPath>
-        <itemPath>USB/usb_device_local.h</itemPath>
-        <itemPath>USB/usb_function_generic.h</itemPath>
-        <itemPath>USB/usb_hal.h</itemPath>
-        <itemPath>USB/usb_hal_dspic33E.h</itemPath>
-        <itemPath>USB/usb_hal_local.h</itemPath>
+      <logicalFolder name="f2" displayName="usb" projectFiles="true">
+        <itemPath>usb/usb.h</itemPath>
+        <itemPath>usb/usb_ch9.h</itemPath>
+        <itemPath>usb/usb_common.h</itemPath>
+        <itemPath>usb/usb_config.h</itemPath>
+        <itemPath>usb/usb_device.h</itemPath>
+        <itemPath>usb/usb_device_local.h</itemPath>
+        <itemPath>usb/usb_hal.h</itemPath>
+        <itemPath>usb/usb_hal_dspic33e.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="USBComm" displayName="USBComm" projectFiles="true">
-        <itemPath>USBComm/USBComm.h</itemPath>
-        <itemPath>USBComm/USBComm_Driver.h</itemPath>
-        <itemPath>USBComm/Msg_Prot.h</itemPath>
+      <logicalFolder name="f3" displayName="usb_app" projectFiles="true">
+        <itemPath>usb_app/usb_app.h</itemPath>
       </logicalFolder>
+      <itemPath>usb/usb_device_hid.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
                    projectFiles="true">
+      <itemPath>p33EP512MU814_ABC.gld</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -58,15 +56,15 @@
       <logicalFolder name="Timers" displayName="Timers" projectFiles="true">
         <itemPath>Timers/Timers.c</itemPath>
       </logicalFolder>
-      <logicalFolder name="USB" displayName="USB" projectFiles="true">
-        <itemPath>USB/usb_descriptors.c</itemPath>
-        <itemPath>USB/usb_device.c</itemPath>
-        <itemPath>USB/usb_function_generic.c</itemPath>
+      <logicalFolder name="f2" displayName="usb" projectFiles="true">
+        <itemPath>usb/usb_descriptors.c</itemPath>
+        <itemPath>usb/usb_device.c</itemPath>
+        <itemPath>usb/usb_device_hid.c</itemPath>
+        <itemPath>usb/usb_events.c</itemPath>
+        <itemPath>usb/usb_hal_16bit.c</itemPath>
       </logicalFolder>
-      <logicalFolder name="USBComm" displayName="USBComm" projectFiles="true">
-        <itemPath>USBComm/USBComm.c</itemPath>
-        <itemPath>USBComm/USBComm_Driver.c</itemPath>
-        <itemPath>USBComm/Msg_Prot.c</itemPath>
+      <logicalFolder name="f3" displayName="usb_app" projectFiles="true">
+        <itemPath>usb_app/usb_app.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
     </logicalFolder>
@@ -239,7 +237,7 @@
       <C30Global>
         <property key="combine-sourcefiles" value="false"/>
         <property key="common-include-directories"
-                  value="Common;IO_Entity;Timers;USB;USBComm;RTC_Control"/>
+                  value="Common;IO_Entity;Timers;RTC_Control;usb_app;usb"/>
         <property key="dual-boot-partition" value="0"/>
         <property key="fast-math" value="false"/>
         <property key="generic-16-bit" value="false"/>
@@ -561,6 +559,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-7fffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="/home/orisol/Code/Orisol/AutoBobbinChanger_RTC/ABC_RTC.X/debug/default/ABC_RTC_ptg"/>
         <property key="programmertogo.imagename" value=""/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
@@ -678,6 +678,8 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-7fffff"/>
+        <property key="programmerToGoFilePath"
+                  value="/home/orisol/Code/Orisol/AutoBobbinChanger_RTC/ABC_RTC.X/debug/default/ABC_RTC_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>

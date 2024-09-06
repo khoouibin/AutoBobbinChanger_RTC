@@ -22,6 +22,12 @@ typedef enum
 
 typedef enum
 {
+    PASS = 0,
+    CONTINUE = 1,
+} CommonMsg_Actions_t;
+
+typedef enum
+{
 	RTC_CONTROL_WINK = 0,
 	RTC_CONTROL_MAX,
 } RTC_Control_Timer_type_t;
