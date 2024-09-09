@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-unsigned char USB_RxBuf[MESSAGE_MAX];
+unsigned char USB_RxBuf[MSG_MAX_SIZE];
 
 USB_Transaction_State_t TxTransState = {0};
 USB_Transaction_State_t RxTransState = {0};
@@ -28,9 +28,8 @@ void __attribute__((interrupt, no_auto_psv)) _USB1Interrupt(void)
 void USB_DeviceInitialize(void)
 {
     USBInHandle = 0;
-    // enable the HID endpoint
     USBEnableEndpoint(CUSTOM_DEVICE_HID_EP, USB_IN_ENABLED | USB_OUT_ENABLED | USB_HANDSHAKE_ENABLED | USB_DISALLOW_SETUP);
-    USBOutHandle = (volatile USB_HANDLE)HIDRxPacket(CUSTOM_DEVICE_HID_EP, (uint8_t *)&USB_RxBuf[0], MESSAGE_MAX);
+    USBOutHandle = (volatile USB_HANDLE)HIDRxPacket(CUSTOM_DEVICE_HID_EP, (uint8_t *)&USB_RxBuf[0], MSG_MAX_SIZE);
     USB_TransStateInit();
 }
 
@@ -65,9 +64,9 @@ char USB_RxBulkBuffer_Get_From_Bus(void)
             RxTransState.Ptr_buff = 0;
 
         i_RxLength = USBHandleGetLength(USBOutHandle);
-        USBOutHandle = HIDRxPacket(CUSTOM_DEVICE_HID_EP, (uint8_t *)&USB_RxBuf[0], MESSAGE_MAX);
+        USBOutHandle = HIDRxPacket(CUSTOM_DEVICE_HID_EP, (uint8_t *)&USB_RxBuf[0], MSG_MAX_SIZE);
 
-        memcpy(RxTransState.Buff[(unsigned char)RxTransState.Ptr_buff], USB_RxBuf, MESSAGE_MAX);
+        memcpy(RxTransState.Buff[(unsigned char)RxTransState.Ptr_buff], USB_RxBuf, MSG_MAX_SIZE);
         RxTransState.MsgSize[(unsigned char)RxTransState.Ptr_buff] = i_RxLength;
 
         RxTransState.Ptr_buff++;
@@ -245,7 +244,7 @@ char USB_Msg_From_RxBuffer(usb_msg_u8 *msg_cmd, unsigned char *msg_size)
         res = -2;
         return res;
     }
-	memcpy(msg_cmd, (ptr_usb_msg_u8)RxTransState.Buff[(unsigned char)*ptr_RxBuff], MESSAGE_MAX);
+	memcpy(msg_cmd, (ptr_usb_msg_u8)RxTransState.Buff[(unsigned char)*ptr_RxBuff], MSG_MAX_SIZE);
     *msg_size = RxTransState.MsgSize[(unsigned char)*ptr_RxBuff];
     RxTransState.Ptr_comp++;
     RxTransState.Ptr_comp &= 0x07;
@@ -256,7 +255,7 @@ char USB_Msg_From_RxBuffer(usb_msg_u8 *msg_cmd, unsigned char *msg_size)
 bool USB_Msg_Parser(USB_Task_msg_t* task_msg)
 {
     char neg_msg[60];
-    usb_msg_u8 msg[MESSAGE_MAX];
+    usb_msg_u8 msg[MSG_MAX_SIZE];
     USB_Task_msg_t* p_taskmsg;
     unsigned char msg_length;   
     bool b_new_msg = false;
@@ -267,36 +266,46 @@ bool USB_Msg_Parser(USB_Task_msg_t* task_msg)
     if (msg_res == 0)
     {
         nrc_res = Is_USB_Msg_NegResponse(p_taskmsg);
-        if (nrc_res == AuxBL_POSITIVE)
+        if (nrc_res == POSITIVE_CODE)
         {
-           memcpy(task_msg, (usb_msg_u8*)msg, MESSAGE_MAX);
+           memcpy(task_msg, (usb_msg_u8*)msg, MSG_MAX_SIZE);
            b_new_msg = true;
+        }
+        else if (nrc_res == NRC_DATA_OUTRANGE)
+        {
+            snprintf(neg_msg, 60, "error message:%s","data out of range");
+            USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
         }
         else
         {
-            snprintf(neg_msg, 60, "negative message:%s","data out of range");
+            snprintf(neg_msg, 60, "error message:%s","unknown command message");
             USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
         }
     }
     return b_new_msg;
 }
 
-unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t* task_msg)
+unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
 {
-    unsigned char res_code = AuxBL_POSITIVE;
-    if (task_msg->cmd_id == AuxBL_NOP)
+    unsigned char res_code = NRC_CMD_NOT_FOUND;
+    unsigned char i;
+    for (i = 0; i < Cmd_MAX; i++)
     {
-        if (task_msg->sub_func == 0x55 || task_msg->sub_func == 0xaa)
+        if (i == task_msg->cmd_id)
         {
-            res_code = AuxBL_POSITIVE;
-        }            
-        else
-        {
-            res_code = AuxBL_NRC_DATA_OUTRANGE;
+            res_code = POSITIVE_CODE;
+            break;
         }
     }
-    else
-         res_code = AuxBL_NRC_CMD_NOT_FOUND;
+    if (res_code == NRC_CMD_NOT_FOUND)
+        return res_code;
+
+    if (task_msg->cmd_id == Cmd_Echo)
+    {
+        res_code = (task_msg->sub_func == 0x55 || task_msg->sub_func == 0xaa)
+                       ? POSITIVE_CODE
+                       : NRC_DATA_OUTRANGE;
+    }
     return res_code;
 }
 
@@ -304,7 +313,7 @@ char USB_NegResp(unsigned char cmd_id, unsigned char neg_code, char* strmsg)
 {
     USB_NegResponse_msg_t neg_resp;
     memset(neg_resp.data, 0, 60);
-    neg_resp.resp_id = AuxBL_Negative_Response;
+    neg_resp.resp_id = RespNeg;
     neg_resp.cmd_id = cmd_id;    
     neg_resp.neg_code = neg_code;
     neg_resp.ignore = 0xff;
@@ -312,72 +321,3 @@ char USB_NegResp(unsigned char cmd_id, unsigned char neg_code, char* strmsg)
     USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&neg_resp, 64);
     return 0;
 }
-
-char Cal_Segment_Checksum(unsigned char select_seg, unsigned int *checksum)
-{
-    // select_seg: 0 -> general segment.
-    //             1 -> auxiliary segment.
-
-    unsigned long begin_addr, end_addr;
-    U16_t lo_word, hi_word, sum_word, checksum_word;
-    U32_t addr;
-
-    if (select_seg > 2)
-        return -1;
-
-    if (select_seg == 0)
-    {
-        begin_addr = 0;
-        end_addr = FLASH_ADDR_GEN_END;
-    }
-    else if (select_seg == 1)
-    {
-        begin_addr = FLASH_ADDR_AUX_START;
-        end_addr = FLASH_ADDR_AUX_END;
-    }
-
-    addr.u32 = begin_addr;
-    sum_word.u16 = 0;
-    checksum_word.u16 = (unsigned int)ADDR_MASK;
-    while (addr.u32 < end_addr)
-    {
-        TBLPAG = addr.word[1];
-        lo_word.u16 = __builtin_tblrdl(addr.word[0]);
-        hi_word.u16 = __builtin_tblrdh(addr.word[0]);
-        sum_word.u16 += lo_word.u16;
-        sum_word.u16 += hi_word.u16;
-        addr.u32 += 2;
-    }
-    checksum_word.u16 -= sum_word.u16;
-    checksum_word.u16 += 1;
-    *checksum = checksum_word.u16;
-    return 0;
-}
-
-//int BL_Set_ConfigReg_RSTPRI(unsigned long addr, unsigned char config_reg)
-//{
-//    ConfigRegTmp_FICD.addr = addr;
-//    ConfigRegTmp_FICD.value = config_reg;
-//    return 0;
-//}
-//
-//int BL_Get_ConfigReg_RSTPRI(unsigned long *addr, unsigned char *config_reg)
-//{
-//    *addr = ConfigRegTmp_FICD.addr;
-//    *config_reg = ConfigRegTmp_FICD.value;
-//    return 0;
-//}
-//
-//int BL_Set_ConfigReg_GSS(unsigned long addr, unsigned char config_reg)
-//{
-//    ConfigRegTmp_FGC.addr = addr;
-//    ConfigRegTmp_FGC.value = config_reg;
-//    return 0;
-//}
-//
-//int BL_Get_ConfigReg_GSS(unsigned long *addr, unsigned char *config_reg)
-//{
-//    *addr = ConfigRegTmp_FGC.addr;
-//    *config_reg = ConfigRegTmp_FGC.value;
-//    return 0;
-//}

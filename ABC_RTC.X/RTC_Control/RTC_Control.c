@@ -19,8 +19,8 @@ void RTC_Control_Handler_Diagnosis();
 RTC_Control_State_t RTC_Control_Main(void)
 {
     USB_Task_msg_t Task_msg;
-    USB_Task_msg_t* pTask_msg;
-    pTask_msg = &Task_msg;
+    // USB_Task_msg_t* pTask_msg;
+    // pTask_msg = &Task_msg;
     // USB_msg_tx_t resp_msg;
     CommonMsg_Actions_t res_CommonMsg;
     bool new_msg;
@@ -30,7 +30,7 @@ RTC_Control_State_t RTC_Control_Main(void)
         new_msg = USB_Msg_Parser(&Task_msg);
         if (new_msg == true)
         {
-            res_CommonMsg = RTC_Control_Hander_CommonMsg(pTask_msg);
+            res_CommonMsg = RTC_Control_Hander_CommonMsg(&Task_msg);
             if (res_CommonMsg == CONTINUE)
             {
                 USB_TxBulkBuffer_To_Bus();
@@ -62,16 +62,16 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t* task_msg)
     CommonMsg_Actions_t res = PASS;
     USB_TaskResp_msg_t task_resp;
     char resp_msg[48];
-    static char cnt = 0;
+    static unsigned int echo_cnt = 0;
 
-    if( task_msg->cmd_id == AuxBL_NOP)
+    if( task_msg->cmd_id == Cmd_Echo)
     {
-        task_resp.cmd_id_rep = AuxBL_NOP + 0x40;
-        task_resp.sub_func = task_msg->sub_func ^ 0xff;
-        snprintf(resp_msg, 48, "hello orisol, cnt:%d",cnt);
+        task_resp.cmd_id_rep = RespPos_Echo;
+        task_resp.sub_func = task_msg->sub_func;
+        snprintf(resp_msg, 48, "echo count:%d",echo_cnt);
         memcpy( task_resp.data,resp_msg, sizeof(resp_msg));
-        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, 64);
-        cnt+=1;
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, 32);
+        echo_cnt+=1;
         res = CONTINUE;
     }
     else

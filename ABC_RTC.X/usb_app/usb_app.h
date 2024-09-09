@@ -6,18 +6,10 @@
 #include "Ons_General.h"
 
 #define TRANSACTION_SIZE 8 // row,Transaction
-#define MESSAGE_MAX 64     // column
+#define MSG_MAX_SIZE 64
 #define MSG_DATA_SIZE 62
 #define ADDR_MASK 0x00ffffff
-#define BL_USB_CMD_ID_OFFSET 0x40
-#define CONFIG_ADDR_HLB 0xF8
-#define CONFIG_ADDR_LLB_MIN 0x04
-#define CONFIG_ADDR_LLB_MAX 0x12
-
-#define FLASH_ADDR_GEN_START 0x000000
-#define FLASH_ADDR_GEN_END   0x055800
-#define FLASH_ADDR_AUX_START 0x7FC000
-#define FLASH_ADDR_AUX_END   0x800000
+#define USB_CMD_ID_OFFSET 0x40
 
 typedef unsigned char *ptr_usb_msg_u8;
 typedef unsigned char usb_msg_u8;
@@ -29,16 +21,38 @@ typedef struct
 	bool Stuck;
 	char Ptr_buff;
 	char Ptr_comp;
-	unsigned char Buff[TRANSACTION_SIZE][MESSAGE_MAX]; //[row][column]
+	unsigned char Buff[TRANSACTION_SIZE][MSG_MAX_SIZE]; //[row][column]
 	unsigned char MsgSize[TRANSACTION_SIZE];
 } USB_Transaction_State_t;
 
-enum Aux_Bootloader_Cmd
+enum Protocol_Command
 {
-	AuxBL_NOP = 0x00,
-	AuxBL_Negative_Response = 0x7f,
+	Cmd_Echo = 0x00,
+	Cmd_MAX,
 };
-// protocol:
+
+enum Protocol_PositiveResponse
+{
+	RespPos_Echo = 0x40,
+};
+
+enum Protocol_NegativeResponse
+{
+	RespNeg = 0x7f,
+};
+
+enum Reponse_Code
+{
+	POSITIVE_CODE = 0x00,
+	NRC_SIZE_ZERO = 0x81,
+	NRC_SIZE_nZERO = 0x82,
+	NRC_SIZE_EXCEED = 0x83,
+	NRC_ADDR_OUTRANGE = 0x84,
+	NRC_DATA_OUTRANGE = 0x85,
+	NRC_CMD_NOT_FOUND = 0x86,
+};
+
+// protocol--> TBD:
 //                               byte0  byte1 byte2 byte3     byte4      byte5.....
 //   Host->Client(cmd):          cmd_id AddrL AddrM AddrH     size       data[n]
 //   Client->Host(feedback):     offset AddrL AddrM AddrH     size       data[n]
@@ -61,16 +75,6 @@ enum Aux_Bootloader_Cmd
 // 9.AuxBL_Reset_PIC             0x10   0xff  0xff  0xff      0
 //   feedback                    0x50   0x00  0x00  0x00      0
 
-enum USB_Task_NRC
-{
-	AuxBL_POSITIVE = 0x00,
-	AuxBL_NRC_SIZE_ZERO = 0x81,
-	AuxBL_NRC_SIZE_nZERO = 0x82,
-	AuxBL_NRC_SIZE_EXCEED = 0x83,
-	AuxBL_NRC_ADDR_OUTRANGE = 0x84,
-	AuxBL_NRC_DATA_OUTRANGE = 0x85,
-	AuxBL_NRC_CMD_NOT_FOUND = 0x86,
-};
 
 typedef struct
 {
@@ -95,23 +99,8 @@ typedef struct
 	unsigned char data[60];
 } USB_NegResponse_msg_t;
 
-typedef struct
-{  // id - 28
-	U16_t RTC_Base;
-	U16_t RTC_Major;
-	U16_t RTC_Minor;
-	U16_t MsgProt_Base;
-	U16_t MsgProt_Major;
-	U16_t MsgProt_Minor;
-	U16_t BL_Base;
-	U16_t BL_Major;
-	U16_t BL_Minor;
-}VersionInfo_t;
-
 void USB_DeviceInitialize(void);
 void USB_TransStateInit(void);
-
-char BL_USB_PushRx_Data(void);
 
 char USB_Msg_From_RxBuffer(usb_msg_u8 *msg_cmd, unsigned char *msg_size);
 char USB_Msg_To_TxBulkBuffer(ptr_usb_msg_u8 send_msg, unsigned char msg_size);
@@ -130,19 +119,8 @@ void BL_USB_TxMutex_Set(void);
 void BL_USB_TxMutex_Clr(void);
 bool BL_USB_TxMutex_Get(void);
 
-// void BL_USB_RxMutex_Set(void);
-// void BL_USB_RxMutex_Clr(void);
-// bool BL_USB_RxMutex_Get(void);
 bool USB_Msg_Parser(USB_Task_msg_t* task_msg);
 unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t* task_msg);
-//char USB_NegResp(unsigned char cmd_fbk, unsigned char neg_code);
 char USB_NegResp(unsigned char cmd_id, unsigned char neg_code, char* strmsg);
-
-char Cal_Segment_Checksum(unsigned char select_seg, unsigned int* checksum);
-
-int BL_Set_ConfigReg_RSTPRI(unsigned long addr, unsigned char config_reg);
-int BL_Get_ConfigReg_RSTPRI(unsigned long *addr, unsigned char *config_reg);
-int BL_Set_ConfigReg_GSS(unsigned long addr, unsigned char config_reg);
-int BL_Get_ConfigReg_GSS(unsigned long *addr, unsigned char *config_reg);
 
 #endif
