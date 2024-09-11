@@ -28,17 +28,33 @@ typedef struct
 enum Protocol_Command
 {
 	Cmd_Echo = 0x00,
+	Cmd_Reset = 0x01,
 	Cmd_MAX,
 };
 
 enum Protocol_PositiveResponse
 {
-	RespPos_Echo = 0x40,
+	RespPositive_Echo = 0x40,
+	RespPositive_Reset = 0x41,
 };
 
 enum Protocol_NegativeResponse
 {
 	RespNeg = 0x7f,
+};
+
+enum Echo_SubFunc
+{
+	SubFunc_55 = 0x55,
+	SubFunc_AA = 0xAA,
+};
+
+enum Reset_SubFunc
+{
+	SubFunc_reset_mcu = 1,
+	SubFunc_reset_usb = 2,
+	SubFunc_reset_uart = 3,
+	SubFunc_reset_max,
 };
 
 enum Reponse_Code
@@ -51,30 +67,6 @@ enum Reponse_Code
 	NRC_DATA_OUTRANGE = 0x85,
 	NRC_CMD_NOT_FOUND = 0x86,
 };
-
-// protocol--> TBD:
-//                               byte0  byte1 byte2 byte3     byte4      byte5.....
-//   Host->Client(cmd):          cmd_id AddrL AddrM AddrH     size       data[n]
-//   Client->Host(feedback):     offset AddrL AddrM AddrH     size       data[n]
-// 1.AuxBL_NOP                   0x00   0xrr  0xss  0xtt      0
-//   feedback                    0x40   0xrr  0xss  0xtt+0x40 0
-// 2.AuxBL_Read_SegmentChecksum  0x01   0xff  0xff  0xff      1          0/1    0:general segment, 1:auxiliary segment.
-//   feedback                    0x41   0x00  0x00  0x00      2          chksumL  chksumH
-// 3.AuxBL_Clear_GenSeg_Flash    0x02   0xff  0xff  0xff      0
-//   feedback                    0x42   0x00  0x00  0x00      0
-// 4.AuxBL_Read_PIC_FlashMemory  0x05   0xrr  0xss  0xtt      16~32
-//   feedback                    0x45   0xrr  0xss  0xtt      16~32      data[0]...data[size-1]
-// 5.AuxBL_Write_PIC_FlashMemory 0x06   0xuu  0xvv  0xww      16~32      data[0]...data[size-1]
-//   feedback                    0x46   0x00  0x00  0x00      write_size fbk_chksum
-// 6.AuxBL_Read_ONS_VersionMsg   0x07   0xii  0xjj  0xkk      1          0/1    0:version number(18bytes), 1:version note(48bytes), addr:memory_offset.
-//   feedback                    0x47   0xii  0xjj  0xkk      18~48      data[n] 
-// 7.AuxBL_Read_PIC_Config       0x0a   0xii  0xjj  0xkk      1
-//   feedback                    0x4a   0xii  0xjj  0xkk      1          data[0]
-// 8.AuxBL_Write_PIC_Config      0x0b   0xii  0xjj  0xkk      1          data[0]
-//   feedback                    0x4b   0x00  0x00  0x00      0
-// 9.AuxBL_Reset_PIC             0x10   0xff  0xff  0xff      0
-//   feedback                    0x50   0x00  0x00  0x00      0
-
 
 typedef struct
 {
@@ -98,6 +90,20 @@ typedef struct
 	unsigned char ignore;
 	unsigned char data[60];
 } USB_NegResponse_msg_t;
+
+typedef struct
+{
+	unsigned char cmd_id;
+	unsigned char sub_func;
+	unsigned char data[2];
+} usb_msg_echo_t;
+
+typedef struct
+{
+	unsigned char cmd_id;
+	unsigned char sub_func;
+	unsigned short  delay_time;
+} usb_msg_reset_t;
 
 void USB_DeviceInitialize(void);
 void USB_TransStateInit(void);

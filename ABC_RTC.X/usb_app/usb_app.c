@@ -252,33 +252,33 @@ char USB_Msg_From_RxBuffer(usb_msg_u8 *msg_cmd, unsigned char *msg_size)
     return res;
 }
 
-bool USB_Msg_Parser(USB_Task_msg_t* task_msg)
+bool USB_Msg_Parser(USB_Task_msg_t *task_msg)
 {
     char neg_msg[60];
     usb_msg_u8 msg[MSG_MAX_SIZE];
-    USB_Task_msg_t* p_taskmsg;
-    unsigned char msg_length;   
+    USB_Task_msg_t *p_taskmsg;
+    unsigned char msg_length;
     bool b_new_msg = false;
     unsigned char nrc_res;
     char msg_res;
-    p_taskmsg = (USB_Task_msg_t*)msg;    
+    p_taskmsg = (USB_Task_msg_t *)msg;
     msg_res = USB_Msg_From_RxBuffer(msg, &msg_length);
     if (msg_res == 0)
     {
         nrc_res = Is_USB_Msg_NegResponse(p_taskmsg);
         if (nrc_res == POSITIVE_CODE)
         {
-           memcpy(task_msg, (usb_msg_u8*)msg, MSG_MAX_SIZE);
-           b_new_msg = true;
+            memcpy(task_msg, (usb_msg_u8 *)msg, MSG_MAX_SIZE);
+            b_new_msg = true;
         }
         else if (nrc_res == NRC_DATA_OUTRANGE)
         {
-            snprintf(neg_msg, 60, "error message:%s","data out of range");
+            snprintf(neg_msg, 60, "error message:%s", "data out of range");
             USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
         }
         else
         {
-            snprintf(neg_msg, 60, "error message:%s","unknown command message");
+            snprintf(neg_msg, 60, "error message:%s", "unknown command message");
             USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
         }
     }
@@ -300,11 +300,25 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
     if (res_code == NRC_CMD_NOT_FOUND)
         return res_code;
 
-    if (task_msg->cmd_id == Cmd_Echo)
+    switch (task_msg->cmd_id)
     {
-        res_code = (task_msg->sub_func == 0x55 || task_msg->sub_func == 0xaa)
+    case Cmd_Echo:
+        res_code = (task_msg->sub_func == SubFunc_55 || task_msg->sub_func == SubFunc_AA)
                        ? POSITIVE_CODE
                        : NRC_DATA_OUTRANGE;
+        break;
+
+    case Cmd_Reset:
+        res_code = NRC_DATA_OUTRANGE;
+        for (i = 0; i < SubFunc_reset_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
+        break;
     }
     return res_code;
 }

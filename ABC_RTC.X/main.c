@@ -92,6 +92,15 @@ char uart2GetPos[9] = {0x01,0x03,0x00,0x20,0x00,0x01,0x85,0xC0,'\0'};
 int uart1RX_flag = 0;
 int uart2RX_flag = 0;
 
+#define RESET_MACRO()   \
+    {                   \
+        SET_CPU_IPL(7); \
+        asm("RESET");   \
+        asm("NOP");     \
+        asm("NOP");     \
+        asm("NOP");     \
+    }
+
 int main(void)
 {
     RTC_Control_State_t Is_Exit_RTC_Control = RTC_CONTROL_STATE_UNDEFINE;
@@ -100,7 +109,7 @@ int main(void)
     Is_Exit_RTC_Control = RTC_Control_Main();
     if (Is_Exit_RTC_Control == RTC_CONTROL_RESET)
     {
-        // reset pic.
+        RESET_MACRO();
     }
     return 0;
 }

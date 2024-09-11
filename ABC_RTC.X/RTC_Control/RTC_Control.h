@@ -8,7 +8,14 @@
 #ifndef _RTC_Control_H_
 #define	_RTC_Control_H_
 
-#define Const_RTC_CONTROL_WINK_ms 450
+#define AT_200h __attribute__((space(prog), address(0x200),section(".RTC_Version")))
+#define AT_208h __attribute__((space(prog), address(0x208),section(".MsgProt_Version") ))
+#define AT_210h __attribute__((space(prog), address(0x210),section(".BL_Version")))
+#define AT_218h __attribute__((space(prog), address(0x218),section(".ParaNull")))
+#define AT_220h __attribute__((space(prog), address(0x220),section(".Version_Msg")))
+
+#define C_RTC_CONTROL_WINK_ms 450
+#define C_MIN_RTC_CONTROL_RESET_DELAY_ms 5
 
 typedef enum
 {
@@ -29,6 +36,7 @@ typedef enum
 typedef enum
 {
 	RTC_CONTROL_WINK = 0,
+    RTC_CONTROL_RESET_DELAY = 1,
 	RTC_CONTROL_MAX,
 } RTC_Control_Timer_type_t;
 

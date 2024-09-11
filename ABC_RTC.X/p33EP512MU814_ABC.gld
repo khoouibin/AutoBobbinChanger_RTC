@@ -49,7 +49,9 @@ MEMORY
   data  (a!xr)   : ORIGIN = 0x1000,        LENGTH = 0xD000
   reset          : ORIGIN = 0x0,           LENGTH = 0x4
   ivt            : ORIGIN = 0x4,           LENGTH = 0x1FC
-  program (xr)   : ORIGIN = 0x200,         LENGTH = 0x55600
+  prog_para(xr)  : ORIGIN = 0x200,         LENGTH = 0x600
+  program (xr)   : ORIGIN = 0x800,         LENGTH = 0x54800
+  prog_psalms(xr): ORIGIN = 0x55000,       LENGTH = 0x800
   auxflash (xr)  : ORIGIN = 0x7FC000,      LENGTH = 0x3FFA
   FGS            : ORIGIN = 0xF80004,      LENGTH = 0x2
   FOSCSEL        : ORIGIN = 0xF80006,      LENGTH = 0x2

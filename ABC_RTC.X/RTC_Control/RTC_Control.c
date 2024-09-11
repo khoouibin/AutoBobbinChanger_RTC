@@ -8,9 +8,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+const int AT_200h RTC_version[4] = {0, 3, 2};
+const int AT_208h MsgProt_ver[4] = {0, 3, 2};
+const int AT_210h BL_version[4] = {0, 1, 2};
+const int AT_218h null00[4];
+const char AT_220h rtc_version_message[48] = {"auto bobbin changer real-time controller"};
 static RTC_Control_State_t control_state = RTC_CONTROL_STATE_UNDEFINE;
+static char reset_en = -1;
 
-CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t* task_msg);
+CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg);
 void RTC_Control_Handler_Uninit();
 void RTC_Control_Handler_Ready();
 void RTC_Control_Handler_Home();
@@ -19,9 +25,6 @@ void RTC_Control_Handler_Diagnosis();
 RTC_Control_State_t RTC_Control_Main(void)
 {
     USB_Task_msg_t Task_msg;
-    // USB_Task_msg_t* pTask_msg;
-    // pTask_msg = &Task_msg;
-    // USB_msg_tx_t resp_msg;
     CommonMsg_Actions_t res_CommonMsg;
     bool new_msg;
     control_state = RTC_CONTROL_STATE_UNINIT;
@@ -38,14 +41,14 @@ RTC_Control_State_t RTC_Control_Main(void)
             }
         }
 
-         if (control_state == RTC_CONTROL_STATE_UNINIT)
-             RTC_Control_Handler_Uninit();
-         else if (control_state == RTC_CONTROL_STATE_READY)
-             RTC_Control_Handler_Ready();
-         else if (control_state == RTC_CONTROL_STATE_HOME)
-             RTC_Control_Handler_Home();
-         else if (control_state == RTC_CONTROL_STATE_DIAGNOSIS)
-             RTC_Control_Handler_Diagnosis();
+        if (control_state == RTC_CONTROL_STATE_UNINIT)
+            RTC_Control_Handler_Uninit();
+        else if (control_state == RTC_CONTROL_STATE_READY)
+            RTC_Control_Handler_Ready();
+        else if (control_state == RTC_CONTROL_STATE_HOME)
+            RTC_Control_Handler_Home();
+        else if (control_state == RTC_CONTROL_STATE_DIAGNOSIS)
+            RTC_Control_Handler_Diagnosis();
 
         if (BL_USB_Tx_1mISR_Get() == 1)
         {
@@ -53,29 +56,58 @@ RTC_Control_State_t RTC_Control_Main(void)
             // to send usb_data every 1ms if bus available.
             USB_TxBulkBuffer_To_Bus();
         }
+
+        if (reset_en == 1)
+        {
+            if (SysTimer_IsTimerExpiered(RTC_CONTROL_RESET_DELAY) == 1)
+            {
+                reset_en = -1;
+                control_state = RTC_CONTROL_RESET;
+            }
+        }
     }
     return control_state;
 }
 
-CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t* task_msg)
+CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
 {
     CommonMsg_Actions_t res = PASS;
     USB_TaskResp_msg_t task_resp;
+    usb_msg_echo_t *p_echo_task;
+    usb_msg_reset_t *p_reset_task;
+    unsigned long reset_delay_cnt;
+
     char resp_msg[48];
     static unsigned int echo_cnt = 0;
-
-    if( task_msg->cmd_id == Cmd_Echo)
+    switch (task_msg->cmd_id)
     {
-        task_resp.cmd_id_rep = RespPos_Echo;
+    case Cmd_Echo:
+        p_echo_task = (usb_msg_echo_t *)task_msg;
+        task_resp.cmd_id_rep = RespPositive_Echo;
         task_resp.sub_func = task_msg->sub_func;
-        snprintf(resp_msg, 48, "echo count:%d",echo_cnt);
-        memcpy( task_resp.data,resp_msg, sizeof(resp_msg));
+        snprintf(resp_msg, 48, "sub_func:0x%02x, echo count:%d", p_echo_task->sub_func, echo_cnt);
+        memcpy(task_resp.data, resp_msg, sizeof(resp_msg));
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, 32);
-        echo_cnt+=1;
+        echo_cnt += 1;
         res = CONTINUE;
-    }
-    else
+        break;
+
+    case Cmd_Reset:
+        p_reset_task = (usb_msg_reset_t *)task_msg;
+        task_resp.cmd_id_rep = RespPositive_Reset;
+        task_resp.sub_func = task_msg->sub_func;
+        task_resp.data[0] = 0;
+        task_resp.data[1] = 0;
+        reset_delay_cnt = (p_reset_task->delay_time < C_MIN_RTC_CONTROL_RESET_DELAY_ms) ? C_MIN_RTC_CONTROL_RESET_DELAY_ms : p_reset_task->delay_time;
+        reset_en = 1;
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_RESET_DELAY, reset_delay_cnt);
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, sizeof(usb_msg_reset_t));
+        res = CONTINUE;
+        break;
+
+    default:
         res = PASS;
+    }
     return res;
 }
 
@@ -86,14 +118,14 @@ void RTC_Control_Handler_Uninit()
 
     if (led_wink_status == -1)
     {
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, Const_RTC_CONTROL_WINK_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
         led_wink_status = 0;
     }
-    else if (led_wink_status == 0)
+    else if (led_wink_status == 0 && reset_en == -1)
     {
         if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
         {
-            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, Const_RTC_CONTROL_WINK_ms);
+            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
             entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
             if (entity_val == 0)
                 IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
