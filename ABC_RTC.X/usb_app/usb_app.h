@@ -29,6 +29,7 @@ enum Protocol_Command
 {
 	Cmd_Echo = 0x00,
 	Cmd_Reset = 0x01,
+	Cmd_Profile = 0x02,
 	Cmd_MAX,
 };
 
@@ -36,6 +37,7 @@ enum Protocol_PositiveResponse
 {
 	RespPositive_Echo = 0x40,
 	RespPositive_Reset = 0x41,
+	RespPositive_Profile = 0x42,	
 };
 
 enum Protocol_NegativeResponse
@@ -55,6 +57,13 @@ enum Reset_SubFunc
 	SubFunc_reset_usb = 2,
 	SubFunc_reset_uart = 3,
 	SubFunc_reset_max,
+};
+
+enum Profile_SubFunc
+{
+	SubFunc_profile_read = 1,
+	SubFunc_profile_write = 2,
+	SubFunc_profile_max,
 };
 
 enum Reponse_Code
@@ -104,6 +113,15 @@ typedef struct
 	unsigned char sub_func;
 	unsigned short  delay_time;
 } usb_msg_reset_t;
+
+typedef struct
+{
+	unsigned char cmd_id;
+	unsigned char sub_func;
+	unsigned char profile_number;
+	unsigned char ignore;
+	unsigned char data[60];
+} usb_msg_profile_t;
 
 void USB_DeviceInitialize(void);
 void USB_TransStateInit(void);

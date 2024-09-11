@@ -319,6 +319,18 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
             }
         }
         break;
+
+    case Cmd_Profile:
+        res_code = NRC_DATA_OUTRANGE;
+        for (i = 0; i < SubFunc_profile_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
+        break;
     }
     return res_code;
 }

@@ -5,6 +5,7 @@
 #include "IO_Control.h"
 #include "IO_Entity.h"
 #include "usb_app.h"
+#include "RTC_Profile.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -75,7 +76,10 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
     USB_TaskResp_msg_t task_resp;
     usb_msg_echo_t *p_echo_task;
     usb_msg_reset_t *p_reset_task;
+    usb_msg_profile_t *p_profile_task;
     unsigned long reset_delay_cnt;
+
+    RTC_Profile_01_t profile_01;
 
     char resp_msg[48];
     static unsigned int echo_cnt = 0;
@@ -102,6 +106,28 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
         reset_en = 1;
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_RESET_DELAY, reset_delay_cnt);
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, sizeof(usb_msg_reset_t));
+        res = CONTINUE;
+        break;
+
+    case Cmd_Profile:
+        p_profile_task = (usb_msg_profile_t *)task_msg;
+        if (p_profile_task->sub_func == SubFunc_profile_write)
+        {
+            RTC_Profile_Update(p_profile_task);
+
+        
+            RTC_Get_Profile_1(&profile_01);
+
+            
+            task_resp.cmd_id_rep = RespPositive_Profile;
+            task_resp.sub_func = task_msg->sub_func;
+            //snprintf(resp_msg, 48, "profile_01_03:%d, profile_01_04:%ld", p_profile_01->profile_01_03, p_profile_01->profile_01_06);
+            memcpy(task_resp.data, resp_msg, sizeof(resp_msg));
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, 32);
+
+            //  USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, sizeof(usb_msg_reset_t));
+        }
+       
         res = CONTINUE;
         break;
 
