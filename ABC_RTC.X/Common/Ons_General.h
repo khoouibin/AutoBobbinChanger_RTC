@@ -14,12 +14,12 @@
 #define ONS_TRUE   1		 
 #define ONS_FALSE  0
 
-
-typedef   unsigned int UINT_16;
-typedef   int INT_16;
-typedef   unsigned long int UINT_32;
-typedef   long int INT_32;
-
+typedef unsigned char UCHAR_8;
+typedef char CHAR_8;
+typedef unsigned int UINT_16;
+typedef int INT_16;
+typedef unsigned long int UINT_32;
+typedef long int INT_32;
 
 typedef unsigned char ONS_BYTE;    
 typedef unsigned long Time_Unit_t;	//unsigned long

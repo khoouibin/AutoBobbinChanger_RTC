@@ -7,7 +7,7 @@
 
 #define TRANSACTION_SIZE 8 // row,Transaction
 #define MSG_MAX_SIZE 64
-#define MSG_DATA_SIZE 62
+#define MSG_DATA_SIZE 60
 #define ADDR_MASK 0x00ffffff
 #define USB_CMD_ID_OFFSET 0x40
 
@@ -37,12 +37,17 @@ enum Protocol_PositiveResponse
 {
 	RespPositive_Echo = 0x40,
 	RespPositive_Reset = 0x41,
-	RespPositive_Profile = 0x42,	
+	RespPositive_Profile = 0x42,
 };
 
 enum Protocol_NegativeResponse
 {
 	RespNeg = 0x7f,
+};
+
+enum Protocol_Dummy
+{
+	Dummy = 0xff,
 };
 
 enum Echo_SubFunc
@@ -61,8 +66,8 @@ enum Reset_SubFunc
 
 enum Profile_SubFunc
 {
-	SubFunc_profile_read = 1,
-	SubFunc_profile_write = 2,
+	SubFunc_profile_get = 1,
+	SubFunc_profile_set = 2,
 	SubFunc_profile_max,
 };
 
@@ -81,6 +86,8 @@ typedef struct
 {
 	unsigned char cmd_id;
 	unsigned char sub_func;
+	unsigned char ignore0;
+	unsigned char ignore1;
 	unsigned char data[MSG_DATA_SIZE];
 } USB_Task_msg_t;
 
@@ -88,6 +95,8 @@ typedef struct
 {
 	unsigned char cmd_id_rep;
 	unsigned char sub_func;
+	unsigned char ignore0;
+	unsigned char ignore1;
 	unsigned char data[MSG_DATA_SIZE];
 } USB_TaskResp_msg_t;
 

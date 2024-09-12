@@ -77,10 +77,8 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
     usb_msg_echo_t *p_echo_task;
     usb_msg_reset_t *p_reset_task;
     usb_msg_profile_t *p_profile_task;
+    usb_msg_profile_t profile_msg;
     unsigned long reset_delay_cnt;
-
-    RTC_Profile_01_t profile_01;
-
     char resp_msg[48];
     static unsigned int echo_cnt = 0;
     switch (task_msg->cmd_id)
@@ -111,23 +109,23 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
 
     case Cmd_Profile:
         p_profile_task = (usb_msg_profile_t *)task_msg;
-        if (p_profile_task->sub_func == SubFunc_profile_write)
+        if (p_profile_task->sub_func == SubFunc_profile_set)
         {
             RTC_Profile_Update(p_profile_task);
-
-        
-            RTC_Get_Profile_1(&profile_01);
-
-            
             task_resp.cmd_id_rep = RespPositive_Profile;
             task_resp.sub_func = task_msg->sub_func;
-            //snprintf(resp_msg, 48, "profile_01_03:%d, profile_01_04:%ld", p_profile_01->profile_01_03, p_profile_01->profile_01_06);
-            memcpy(task_resp.data, resp_msg, sizeof(resp_msg));
-            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, 32);
-
-            //  USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, sizeof(usb_msg_reset_t));
+            task_resp.data[0] = p_profile_task->profile_number;
+            task_resp.data[1] = 0;
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&task_resp, 4);
         }
-       
+        else if (p_profile_task->sub_func == SubFunc_profile_get)
+        {
+            RTC_Get_Profile(p_profile_task->profile_number,&profile_msg);
+            profile_msg.cmd_id = RespPositive_Profile;
+            profile_msg.sub_func = p_profile_task->sub_func;
+            profile_msg.profile_number = p_profile_task->profile_number;
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&profile_msg, sizeof(usb_msg_profile_t));
+        }
         res = CONTINUE;
         break;
 
@@ -152,6 +150,18 @@ void RTC_Control_Handler_Uninit()
         if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
         {
             SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
+            entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
+            if (entity_val == 0)
+                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
+            else
+                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 0);
+        }
+    }
+    else if (led_wink_status == 0 && reset_en == 1)
+    {
+        if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
+        {
+            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms/4);
             entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
             if (entity_val == 0)
                 IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
