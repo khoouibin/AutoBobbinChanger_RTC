@@ -6,6 +6,7 @@
 #include "IO_Entity.h"
 #include "usb_app.h"
 #include "RTC_Profile.h"
+#include "RTC_Log.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -78,6 +79,8 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
     usb_msg_reset_t *p_reset_task;
     usb_msg_profile_t *p_profile_task;
     usb_msg_profile_t profile_msg;
+    usb_msg_log_t *p_log_task;
+    usb_msg_log_reply_t log_task_resp;
     unsigned long reset_delay_cnt;
     char resp_msg[48];
     static unsigned int echo_cnt = 0;
@@ -125,6 +128,28 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
             profile_msg.sub_func = p_profile_task->sub_func;
             profile_msg.profile_number = p_profile_task->profile_number;
             USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&profile_msg, sizeof(usb_msg_profile_t));
+        }
+        res = CONTINUE;
+        break;
+
+    case Cmd_Log:
+        p_log_task = (usb_msg_log_t *)task_msg;
+        if (p_log_task->sub_func == SubFunc_log_level_set)
+        {
+            RTC_LogLevel_Set(p_log_task->set_level);
+            log_task_resp.cmd_id_rep = RespPositive_Log;
+            log_task_resp.sub_func = p_log_task->sub_func;
+            log_task_resp.log_counter = 0xffff;
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&log_task_resp, 4);
+        }
+        else if (p_log_task->sub_func == SubFunc_log_level_get)
+        {
+            log_task_resp.cmd_id_rep = RespPositive_Log;
+            log_task_resp.sub_func = p_log_task->sub_func;
+            log_task_resp.log_counter = 0xffff;
+            memset(log_task_resp.data, 0xff, sizeof(log_task_resp.data));
+            log_task_resp.data[0] = (unsigned char)RTC_LogLevel_Get();
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&log_task_resp, 8);
         }
         res = CONTINUE;
         break;

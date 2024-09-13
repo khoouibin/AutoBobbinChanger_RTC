@@ -1,14 +1,13 @@
 #include <xc.h>
+#include <stdio.h>
+#include <stdbool.h>
+
 #include "usb_app.h"
-//#include "display_LED7.h"
+#include "RTC_Log.h"
 #include "Ons_General.h"
-//#include "NVM_func.h"
-//#include "HardwareProfile_dsPIC33EP512MU810_PIM.h"
 #include "RTC_IOports.h"
 #include "IO_Control.h"
 #include "IO_Entity.h"
-#include <stdio.h>
-#include <stdbool.h>
 
 unsigned char USB_RxBuf[MSG_MAX_SIZE];
 
@@ -271,9 +270,9 @@ bool USB_Msg_Parser(USB_Task_msg_t *task_msg)
             memcpy(task_msg, (usb_msg_u8 *)msg, MSG_MAX_SIZE);
             b_new_msg = true;
         }
-        else if (nrc_res == NRC_DATA_OUTRANGE)
+        else if (nrc_res == NRC_SUBFUNC_OUTRANGE)
         {
-            snprintf(neg_msg, 60, "error message:%s", "data out of range");
+            snprintf(neg_msg, 60, "error message:%s", "subfunction out of range");
             USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
         }
         else
@@ -289,6 +288,7 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
 {
     unsigned char res_code = NRC_CMD_NOT_FOUND;
     unsigned char i;
+    usb_msg_log_t *p_log_task=(usb_msg_log_t *)task_msg;
     for (i = 0; i < Cmd_MAX; i++)
     {
         if (i == task_msg->cmd_id)
@@ -305,11 +305,11 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
     case Cmd_Echo:
         res_code = (task_msg->sub_func == SubFunc_55 || task_msg->sub_func == SubFunc_AA)
                        ? POSITIVE_CODE
-                       : NRC_DATA_OUTRANGE;
+                       : NRC_SUBFUNC_OUTRANGE;
         break;
 
     case Cmd_Reset:
-        res_code = NRC_DATA_OUTRANGE;
+        res_code = NRC_SUBFUNC_OUTRANGE;
         for (i = 0; i < SubFunc_reset_max; i++)
         {
             if (i == task_msg->sub_func)
@@ -321,7 +321,7 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
         break;
 
     case Cmd_Profile:
-        res_code = NRC_DATA_OUTRANGE;
+        res_code = NRC_SUBFUNC_OUTRANGE;
         for (i = 0; i < SubFunc_profile_max; i++)
         {
             if (i == task_msg->sub_func)
@@ -330,6 +330,35 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
                 break;
             }
         }
+        break;
+
+    case Cmd_Log:
+        res_code = NRC_SUBFUNC_OUTRANGE;
+        for (i = 0; i < SubFunc_log_max - 1; i++)
+        {
+            if (i == p_log_task->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
+        if (p_log_task->sub_func == SubFunc_log_level_set)
+        {
+            res_code = NRC_DATA_OUTRANGE;
+            for (i = 0; i < LogLev_MAX; i++)
+            {
+                if (i == p_log_task->set_level)
+                {
+                    res_code = POSITIVE_CODE;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            res_code = POSITIVE_CODE;
+        }
+
         break;
     }
     return res_code;
