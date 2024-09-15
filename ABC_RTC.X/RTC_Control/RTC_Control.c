@@ -136,11 +136,13 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
         p_log_task = (usb_msg_log_t *)task_msg;
         if (p_log_task->sub_func == SubFunc_log_level_set)
         {
-            RTC_LogLevel_Set(p_log_task->set_level);
+            RTC_LogLevel_Set((enum LogLev)p_log_task->set_level);
             log_task_resp.cmd_id_rep = RespPositive_Log;
             log_task_resp.sub_func = p_log_task->sub_func;
             log_task_resp.log_counter = 0xffff;
-            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&log_task_resp, 4);
+            memset(log_task_resp.data, 0xff, sizeof(log_task_resp.data));
+            log_task_resp.data[0] = (unsigned char)RTC_LogLevel_Get();
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&log_task_resp, 8);
         }
         else if (p_log_task->sub_func == SubFunc_log_level_get)
         {
@@ -164,7 +166,8 @@ void RTC_Control_Handler_Uninit()
 {
     static char led_wink_status = -1;
     int entity_val = -1;
-
+    char log_msg[60];
+    
     if (led_wink_status == -1)
     {
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
@@ -173,7 +176,10 @@ void RTC_Control_Handler_Uninit()
     else if (led_wink_status == 0 && reset_en == -1)
     {
         if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
-        {
+        { 
+            snprintf(log_msg, 60, "hello orisol");
+            
+            RTC_LogMsg(Debug_Lev, log_msg);
             SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
             entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
             if (entity_val == 0)
