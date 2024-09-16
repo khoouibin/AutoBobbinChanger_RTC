@@ -37,11 +37,18 @@ typedef enum {
     mask_debug=Debug_MASK,
 } log_mask;
 
-typedef struct   
+typedef struct
 {
-    enum LogLev    u8_level;
-    enum LogMask  u8_mask;
-}enum_log;
+    enum LogLev u8_level;
+    enum LogMask u8_mask;
+} enum_log;
+
+typedef struct
+{
+    enum LogLev u8_level;
+    char* log_header;
+    char header_size;
+} enum_header;
 
 
 void RTC_LogLevel_Set(enum LogLev u8_value);
@@ -49,7 +56,12 @@ enum LogLev RTC_LogLevel_Get(void);
 char RTC_LogMsg(enum LogLev level, char *log_msg);
 
 char RTC_GetLevelMask(enum_log *table, enum LogLev log_level);
-char Getloglevel(enum LogLev value);
+char GetLevelMask_by_inner_level(enum LogLev value);
 
+// char *RTC_GetLevelHeader(enum_header *table, enum LogLev log_level);
+// char *GetLevelHeader_by_inner_level(enum LogLev value);
+
+char *RTC_GetLevelHeader(enum_header *table, enum LogLev log_level,char* header_size);
+char *GetLevelHeader_by_inner_level(enum LogLev value, char* header_size);
 #endif
 

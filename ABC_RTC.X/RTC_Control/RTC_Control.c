@@ -177,15 +177,17 @@ void RTC_Control_Handler_Uninit()
     {
         if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
         { 
-            snprintf(log_msg, 60, "hello orisol");
-            
-            RTC_LogMsg(Debug_Lev, log_msg);
             SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
             entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
             if (entity_val == 0)
                 IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
             else
                 IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 0);
+
+            //snprintf(log_msg, 60, "IO_PUNCHER_PISTON_UP_ENTITY:%d",(!entity_val));
+            
+            //snprintf(log_msg, 60, "USBGetDeviceState:%d",USBGetDeviceState());
+            //RTC_LogMsg(Debug_Lev, log_msg);
         }
     }
     else if (led_wink_status == 0 && reset_en == 1)
