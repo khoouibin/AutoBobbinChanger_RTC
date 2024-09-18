@@ -18,5 +18,7 @@ int IO_Toggle( IO_Port_Id_t IO_Id );
 int IO_Entity_Mgr_Get_Entity( int Entity_Port_Or_Act_ID );
 int IO_Entity_Mgr_Set_Entity( int Entity_Port_Or_Act_ID , int Value );
 
+void Get_EntityTable(unsigned char *data, unsigned char *data_size);
+
 #endif	// _IO_CONTROL_H_
 

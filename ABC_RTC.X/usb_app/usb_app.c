@@ -358,7 +358,30 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
         {
             res_code = POSITIVE_CODE;
         }
+        break;
 
+    case Cmd_EntityTable:
+        res_code = NRC_SUBFUNC_OUTRANGE;
+        for (i = 0; i < SubFunc_entitytable_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
+        break;
+
+    case Cmd_EntityPack:
+        res_code = NRC_SUBFUNC_OUTRANGE;
+        for (i = 0; i < SubFunc_entitypack_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
         break;
     }
     return res_code;

@@ -8,6 +8,8 @@
 #define TRANSACTION_SIZE 8 // row,Transaction
 #define MSG_MAX_SIZE 64
 #define MSG_DATA_SIZE 60
+#define MSG_ENTITY_MAX_PACK_SIZE 30
+#define MSG_ENTITY_TABLE_REPLY_SIZE 22
 #define ADDR_MASK 0x00ffffff
 #define USB_CMD_ID_OFFSET 0x40
 
@@ -31,6 +33,8 @@ enum Protocol_Command
 	Cmd_Reset = 0x01,
 	Cmd_Profile = 0x02,
 	Cmd_Log = 0x03,
+	Cmd_EntityTable = 0x04,
+	Cmd_EntityPack = 0x05,
 	Cmd_MAX,
 };
 
@@ -40,6 +44,8 @@ enum Protocol_PositiveResponse
 	RespPositive_Reset = 0x41,
 	RespPositive_Profile = 0x42,
 	RespPositive_Log = 0x43,
+	RespPositive_EntityTable = 0x44,
+	RespPositive_EntityPack = 0x45,
 };
 
 enum Protocol_NegativeResponse
@@ -49,7 +55,8 @@ enum Protocol_NegativeResponse
 
 enum Protocol_Dummy
 {
-	Dummy = 0xff,
+	Dummy_00 = 0x00,
+	Dummy_ff = 0xff,
 };
 
 enum Echo_SubFunc
@@ -79,6 +86,23 @@ enum Log_SubFunc
 	SubFunc_log_level_set = 2,
 	SubFunc_log_msg_reply = 3,
 	SubFunc_log_max,
+};
+
+enum EntityTable_SubFunc
+{
+	SubFunc_table_get_off = 0,
+	SubFunc_table_get_instant = 1,
+	SubFunc_table_get_period = 2,
+	SubFunc_table_get_changed = 3,
+	SubFunc_table_set = 5,
+	SubFunc_entitytable_max,
+};
+
+enum EntityPack_SubFunc
+{
+	SubFunc_pack_get = 1,
+	SubFunc_pack_set = 2,
+	SubFunc_entitypack_max,
 };
 
 enum Reponse_Code
@@ -158,6 +182,63 @@ typedef struct
 	unsigned short log_counter;
 	unsigned char data[MSG_DATA_SIZE];
 } usb_msg_log_reply_t;
+
+// template:
+// SubFunc_table_get_instant: 0x04, 0x01, 0x00, 22;
+// reply:                     0x44, 0x01, 0x00, 22, ...(data = 22 bytes)
+// SubFunc_table_get_period:  0x04, 0x02, msec, 22;
+// reply:                     0x44, 0x02, msec, 22, ...(data = 22 bytes)
+// SubFunc_table_get_changed: 0x04, 0x03, 0x00, 22;
+// reply:                     0x44, 0x03, 0x00, 22, ...(data = 22 bytes)
+// SubFunc_table_get_off:     0x04, 0x04, 0x00, 0;
+// reply:                     0x44, 0x04, 0x00, 0,
+
+// SubFunc_pack_get:          0x05, 0x01, 0x00, entity_pack_size;
+// reply:                     0x45, 0x01, 0x00, entity_pack_size, ...(data = n entity_pack)
+// SubFunc_pack_set:          0x05, 0x02, 0x00, entity_pack_size, ...(data = n entity_pack);
+// reply:                     0x45, 0x02, 0x00, 0;
+
+typedef struct
+{
+	unsigned char entity_name;
+	unsigned char entity_value;
+} ioentity_pack_t;
+
+typedef struct
+{
+	unsigned char cmd_id;
+	unsigned char sub_func;
+	unsigned char reply_period;
+	unsigned char table_size;
+	unsigned char data[MSG_ENTITY_TABLE_REPLY_SIZE];
+} usb_msg_entitytable_t;
+
+typedef struct
+{
+	unsigned char cmd_id_rep;
+	unsigned char sub_func;
+	unsigned char reply_period;
+	unsigned char table_size;
+	unsigned char data[MSG_ENTITY_TABLE_REPLY_SIZE];
+} usb_msg_entitytable_reply_t;
+
+typedef struct
+{
+	unsigned char cmd_id_rep;
+	unsigned char sub_func;
+	unsigned char reply_period;
+	unsigned char pack_size;
+	ioentity_pack_t entity_pack[MSG_ENTITY_MAX_PACK_SIZE];
+} usb_msg_entity_pack_t;
+
+typedef struct
+{
+	unsigned char cmd_id_rep;
+	unsigned char sub_func;
+	unsigned char reply_period;
+	unsigned char pack_size;
+	ioentity_pack_t entity_pack[MSG_ENTITY_MAX_PACK_SIZE];
+} usb_msg_entity_pack_reply_t;
 
 void USB_DeviceInitialize(void);
 void USB_TransStateInit(void);

@@ -15,6 +15,8 @@
 #include "Ons_General.h"
 #include "Timers.h"
 #include "xc.h"
+#include <stdio.h>
+#include <stdbool.h>
 
 typedef struct
 {
@@ -252,216 +254,61 @@ int IO_Entity_Mgr_Set_Entity(int Entity_Port_Or_Act_ID, int Value)
         break;
 
     case IO_INPUT:
-        Nop();
-        break;
-
     case IO_ACTIVATOR:
-        if (Value != -1)
-        {
-            Nop();
-            // ret_val = Set_Activator( Entities_Def[ Entity_Port_Or_Act_ID ].Entity_PORT_OR_ACT_ID , Value , SysTimer_GetTimeInMiliSeconds() );
-        }
-        break;
-
     case IO_SENSOR:
-        if ((Value == 0) || (Value == 1)) // ignore incorrect values
-        {
-            // SENS_Enable_Disable_Sensor( Entities_Def[ Entity_Port_Or_Act_ID ].Entity_PORT_OR_ACT_ID , Value );
-            ret_val = 0;
-        }
+        Nop();
         break;
     }
     return ret_val;
 }
 
-// int IO_Entity_Mgr_Convert_Host_Cmd(int Entity_Port_Or_Act_ID, int Value)
-// {
-//     int command_val;
-
-//     command_val = -1; // to ignore illegal command
-
-//     if (Entities_Def[Entity_Port_Or_Act_ID].Entity_Type == IO_ACTIVATOR)
-//     {
-//         switch (Entity_Port_Or_Act_ID)
-//         {
-//         // update
-//         case ACT_LDR_YA_PISTON_ACT_ENTITY:
-
-//             switch (Value)
-//             {
-//             case IO_ENTITY_ARM_TO_NEAR_CMD:
-
-//                 command_val = YA_PISTON_NEAR_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ARM_TO_FAR_CMD:
-
-//                 command_val = YA_PISTON_FAR_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ACT_FREEZE_CMD:
-
-//                 command_val = YA_PISTON_FREEZE_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ACT_UNFREEZE_CMD:
-
-//                 command_val = YA_PISTON_UNFREEZE_ACT_CMD;
-
-//                 break;
-//             }
-
-//             break;
-
-//         case ACT_LDR_CL_PISTON_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_CLAMP_TO_UNLOCK_CMD)
-//                 command_val = CL_PISTON_UNLOCK_ACT_CMD;
-//             else if (Value == IO_ENTITY_CLAMP_TO_LOCK_CMD)
-//                 command_val = CL_PISTON_LOCK_ACT_CMD;
-
-//             break;
-
-//         case ACT_LDR_XA_PISTON_LEFT_ACT_ENTITY:
-
-//             switch (Value)
-//             {
-//             case IO_ENTITY_ARM_TO_NEAR_CMD:
-
-//                 command_val = XA_PISTON_NEAR_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ARM_TO_FAR_CMD:
-
-//                 command_val = XA_PISTON_FAR_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ACT_FREEZE_CMD:
-
-//                 command_val = XA_PISTON_FREEZE_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ACT_UNFREEZE_CMD:
-
-//                 command_val = XA_PISTON_UNFREEZE_ACT_CMD;
-
-//                 break;
-//             }
-
-//             break;
-
-//         case ACT_LDR_ZP_PISTON_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_PINS_TO_LOCK_CMD)
-//                 command_val = ZP_PISTON_LOCK_ACT_CMD;
-//             else if (Value == IO_ENTITY_PINS_TO_UNLOCK_CMD)
-//                 command_val = ZP_PISTON_UNLOCK_ACT_CMD;
-
-//             break;
-
-//         case ACT_LDR_XP_PISTON_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_PINS_TO_LOCK_CMD)
-//                 command_val = XP_PISTON_LOCK_ACT_CMD;
-//             else if (Value == IO_ENTITY_PINS_TO_UNLOCK_CMD)
-//                 command_val = XP_PISTON_UNLOCK_ACT_CMD;
-
-//             break;
-
-//         case ACT_LDR_ZA_PISTON_ACT_ENTITY:
-
-//             switch (Value)
-//             {
-//             case IO_ENTITY_ARM_TO_UP_CMD:
-
-//                 command_val = ZA_PISTON_UP_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ARM_TO_DOWN_CMD:
-
-//                 command_val = ZA_PISTON_DN_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ACT_FREEZE_CMD:
-
-//                 command_val = ZA_PISTON_FREEZE_ACT_CMD;
-
-//                 break;
-
-//             case IO_ENTITY_ACT_UNFREEZE_CMD:
-
-//                 command_val = ZA_PISTON_UNFREEZE_ACT_CMD;
-
-//                 break;
-//             }
-
-//             break;
-
-//         case ACT_CLAMP_LEFT_LOCK_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_CLAMP_TO_LOCK_CMD)
-//                 command_val = CLAMP_LEFT_LOCK_ACT_CMD;
-//             else if (Value == IO_ENTITY_CLAMP_TO_UNLOCK_CMD)
-//                 command_val = CLAMP_LEFT_UNLOCK_ACT_CMD;
-
-//             break;
-
-//         case ACT_CLAMP_RIGHT_LOCK_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_CLAMP_TO_LOCK_CMD)
-//                 command_val = CLAMP_RIGHT_LOCK_ACT_CMD;
-//             else if (Value == IO_ENTITY_CLAMP_TO_UNLOCK_CMD)
-//                 command_val = CLAMP_RIGHT_UNLOCK_ACT_CMD;
-
-//             break;
-
-//         case ACT_CLAMP1_3S_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_CLAMP_TO_LOCK_CMD)
-//                 command_val = CLAMP1_S3_CLOSE_CMD;
-//             else if (Value == IO_ENTITY_CLAMP_TO_MID_CMD)
-//                 command_val = CLAMP1_S3_MID_CMD;
-//             else if (Value == IO_ENTITY_CLAMP_TO_UNLOCK_CMD)
-//                 command_val = CLAMP1_S3_OPEN_CMD;
-
-//             break;
-
-//         case ACT_OPEN_COVER_PISTON_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_UPPER_COVER_CLOSE_CMD)
-//                 command_val = UPPER_COVER_CLOSE_ACT_CMD;
-//             else if (Value == IO_ENTITY_UPPER_COVER_OPEN_CMD)
-//                 command_val = UPPER_COVER_OPEN_ACT_CMD;
-
-//             break;
-
-//         case ACT_UT_WELDER_ACT_ENTITY:
-
-//             if (Value == IO_ENTITY_UT_WELDER_UP_CMD)
-//                 command_val = UT_WELDER_UP_ACT_CMD;
-//             else if (Value == IO_ENTITY_UT_WELDER_DOWN_CMD)
-//                 command_val = UT_WELDER_DOWN_ACT_CMD;
-//             break;
-
-//         default:
-
-//             command_val = Value;
-
-//             break;
-//         }
-//     }
-//     else
-//     {
-//         command_val = Value;
-//     }
-
-//     return command_val;
-// }
+#define ENTITY_TAB_SIZE 22
+static unsigned char gEntityTable[ENTITY_TAB_SIZE];
+static unsigned char gEntityTable_Backup[ENTITY_TAB_SIZE];
+
+char Get_EntityTable_Idx_Value(unsigned char entity_num)
+{
+    unsigned char tmp = gEntityTable[entity_num / 8] & (1 << (entity_num % 8));
+    char bit_value = (tmp > 0) ? 1 : 0;
+    return bit_value;
+}
+
+char Set_EntityTable_Idx_Value(unsigned char entity_num)
+{
+    gEntityTable[entity_num / 8] |= (1 << (entity_num % 8));
+    return 0;
+}
+
+char Clr_EntityTable_Idx_Value(unsigned char entity_num)
+{
+    gEntityTable[entity_num / 8] &= (1 << (entity_num % 8)) ^ 0xff;
+    return 0;
+}
+
+void Refresh_EntityTable()
+{
+    unsigned char i = 0;
+    char entity_value;
+    for (i = 0; i < IO_TABLE_MAX; i++)
+    {
+        entity_value = IO_Entity_Mgr_Get_Entity(i);
+        (entity_value == 0) ? Clr_EntityTable_Idx_Value(i) : Set_EntityTable_Idx_Value(i);
+    }
+}
+
+// e.g. IO_PUNCHER_PISTON_UP_ENTITY = 20
+//      IO_LOADER_GREEN_LAMP_ENTITY = 48
+//      IO_UT_WELDER_DEVICE_ON_ENTITY = 171
+// three entity name mapping to LATH15,
+// so states of bit 20, bit48, bit171 are the same.
+//	IOP_PUNCHER_PISTON_UP_ID        = 52,
+//	IOP_LOADER_GREEN_LAMP_ID        = 52,
+//  IOP_UT_WELDER_DEVICE_ON_ID      = 52,
+
+// escape: 380usec, waste time, should be have a better solution.
+void Get_EntityTable(unsigned char *data, unsigned char *data_size)
+{
+    Refresh_EntityTable();
+    memcpy(data, gEntityTable, sizeof(gEntityTable));
+    *data_size = sizeof(gEntityTable);
+}

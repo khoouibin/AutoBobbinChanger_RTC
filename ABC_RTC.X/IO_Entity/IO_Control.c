@@ -49,29 +49,15 @@ void IO_Init_PPS(void)
 {
 	PPSUnLock;
 	iPPSOutput(OUT_PIN_PPS_RP84, OUT_FN_PPS_OC1); // Step Z 	// RE4/RP84  		//PIn 144
-	iPPSInput(IN_FN_PPS_T6CK, IN_PIN_PPS_RPI32); // Step Counter     // On New RTC uses the RB0/RPI32
-	iPPSInput(IN_FN_PPS_QEI1, IN_PIN_PPS_RPI72); // Index    // RD8/RPI72        //Pin 97
-	iPPSInput(IN_FN_PPS_QEA1, IN_PIN_PPS_RPI77); // Ch A     // RD13/RPI77      // Pin 114
-	iPPSInput(IN_FN_PPS_QEB1, IN_PIN_PPS_RPI76); // Ch B     // RD12/RPI76      // Pin 113
-	iPPSInput(IN_FN_PPS_INT3, IN_PIN_PPS_RPI42); // INT3     // RB10/RPI42
-	iPPSInput(IN_FN_PPS_INT4, IN_PIN_PPS_RPI40); // INT4     // RB8/RPI40
+	iPPSInput(IN_FN_PPS_T6CK, IN_PIN_PPS_RPI32);  // Step Counter     // On New RTC uses the RB0/RPI32
+	iPPSInput(IN_FN_PPS_QEI1, IN_PIN_PPS_RPI72);  // Index    // RD8/RPI72        //Pin 97
+	iPPSInput(IN_FN_PPS_QEA1, IN_PIN_PPS_RPI77);  // Ch A     // RD13/RPI77      // Pin 114
+	iPPSInput(IN_FN_PPS_QEB1, IN_PIN_PPS_RPI76);  // Ch B     // RD12/RPI76      // Pin 113
+	iPPSInput(IN_FN_PPS_INT3, IN_PIN_PPS_RPI42);  // INT3     // RB10/RPI42
+	iPPSInput(IN_FN_PPS_INT4, IN_PIN_PPS_RPI40);  // INT4     // RB8/RPI40
 	PPSLock;
 }
 
-// ---------------------------------------------------------------------------
-//  Function name		:	IO_Get
-//
-//  Purpose				:	Get the Pin status according to the IO_ID.
-//
-//  Inputs				: 	IO_ID
-//
-//  Outputs				:   Pin status 
-//
-//  Returns				: 	returns the Pin value
-//
-//  Description			:
-//
-// ---------------------------------------------------------------------------
 int IO_Get(IO_Port_Id_t IO_Id)
 {
 	return ((*(IO_Reg_Addr[IO_Ports_Table[IO_Id].Reg_ID])) & (IO_Ports_Table[IO_Id].IO_Mask)); // return 1 when sensor bit is 1
@@ -90,29 +76,15 @@ int IO_Set(IO_Port_Id_t IO_Id, int Val)
 	return 0;
 }
 
-// ---------------------------------------------------------------------------
-//  Function name		:	IO_Toggle
-//
-//  Purpose				:	IO_Toggle the Pin state according to the IO_ID and Val
-//
-//  Inputs				: 	IO_ID
-//
-//  Outputs				: 	None
-//
-//  Returns				: 
-//
-//  Description			:
-//
-// ---------------------------------------------------------------------------
-int IO_Toggle( IO_Port_Id_t IO_Id )
+int IO_Toggle(IO_Port_Id_t IO_Id)
 {
-    if( ( *( IO_Reg_Addr[ IO_Ports_Table[ IO_Id ].Reg_ID ] ) ) & ( IO_Ports_Table[ IO_Id ].IO_Mask ) )//set the bit to 1
-    {
-        ( *(IO_Reg_Addr[ IO_Ports_Table[ IO_Id ].Reg_ID ] ) ) &= ( ~IO_Ports_Table[ IO_Id ].IO_Mask ) ;
-    }
-    else
-    {
-        ( *(IO_Reg_Addr[ IO_Ports_Table[ IO_Id ].Reg_ID ] ) ) |= IO_Ports_Table[ IO_Id ].IO_Mask ;
-    }
-    return 0;
+	if ((*(IO_Reg_Addr[IO_Ports_Table[IO_Id].Reg_ID])) & (IO_Ports_Table[IO_Id].IO_Mask)) // set the bit to 1
+	{
+		(*(IO_Reg_Addr[IO_Ports_Table[IO_Id].Reg_ID])) &= (~IO_Ports_Table[IO_Id].IO_Mask);
+	}
+	else
+	{
+		(*(IO_Reg_Addr[IO_Ports_Table[IO_Id].Reg_ID])) |= IO_Ports_Table[IO_Id].IO_Mask;
+	}
+	return 0;
 }

@@ -58,9 +58,6 @@ char RTC_LogMsg(enum LogLev level, char *log_msg);
 char RTC_GetLevelMask(enum_log *table, enum LogLev log_level);
 char GetLevelMask_by_inner_level(enum LogLev value);
 
-// char *RTC_GetLevelHeader(enum_header *table, enum LogLev log_level);
-// char *GetLevelHeader_by_inner_level(enum LogLev value);
-
 char *RTC_GetLevelHeader(enum_header *table, enum LogLev log_level,char* header_size);
 char *GetLevelHeader_by_inner_level(enum LogLev value, char* header_size);
 #endif
