@@ -303,6 +303,8 @@ void Refresh_EntityTable_by_macro01()
 {
     unsigned char i = 0;
     char entity_value;
+    memset(gEntityTable, 0xff, ENTITY_TAB_SIZE);
+
     for (i = 0; i < IO_TABLE_MAX; i++)
     {
         entity_value = GetIO_ByEntityName(i);
@@ -314,710 +316,357 @@ void Refresh_EntityTable_by_macro01()
 void Refresh_EntityTable_by_macro02()
 {
     memset(gEntityTable, 0xff, ENTITY_TAB_SIZE);
+
     if (GetIO_ByEntityName(0) == 0)
-    {
-        ClrEntityTabVal(0)
-    }
+        ClrEntityTabVal(0);
     if (GetIO_ByEntityName(1) == 0)
-    {
-        ClrEntityTabVal(1)
-    }
+        ClrEntityTabVal(1);
     if (GetIO_ByEntityName(2) == 0)
-    {
-        ClrEntityTabVal(2)
-    }
+        ClrEntityTabVal(2);
     if (GetIO_ByEntityName(3) == 0)
-    {
-        ClrEntityTabVal(3)
-    }
+        ClrEntityTabVal(3);
     if (GetIO_ByEntityName(4) == 0)
-    {
-        ClrEntityTabVal(4)
-    }
+        ClrEntityTabVal(4);
     if (GetIO_ByEntityName(5) == 0)
-    {
         ClrEntityTabVal(5)
-    }
     if (GetIO_ByEntityName(6) == 0)
-    {
-        ClrEntityTabVal(6)
-    }
+        ClrEntityTabVal(6);
     if (GetIO_ByEntityName(7) == 0)
-    {
-        ClrEntityTabVal(7)
-    }
+        ClrEntityTabVal(7);
     if (GetIO_ByEntityName(8) == 0)
-    {
-        ClrEntityTabVal(8)
-    }
+        ClrEntityTabVal(8);
     if (GetIO_ByEntityName(9) == 0)
-    {
-        ClrEntityTabVal(9)
-    }
+        ClrEntityTabVal(9);
     if (GetIO_ByEntityName(10) == 0)
-    {
-        ClrEntityTabVal(10)
-    }
+        ClrEntityTabVal(10);
     if (GetIO_ByEntityName(11) == 0)
-    {
-        ClrEntityTabVal(11)
-    }
+        ClrEntityTabVal(11);
     if (GetIO_ByEntityName(12) == 0)
-    {
-        ClrEntityTabVal(12)
-    }
+        ClrEntityTabVal(12);
     if (GetIO_ByEntityName(13) == 0)
-    {
-        ClrEntityTabVal(13)
-    }
+        ClrEntityTabVal(13);
     if (GetIO_ByEntityName(14) == 0)
-    {
-        ClrEntityTabVal(14)
-    }
+        ClrEntityTabVal(14);
     if (GetIO_ByEntityName(15) == 0)
-    {
-        ClrEntityTabVal(15)
-    }
+        ClrEntityTabVal(15);
     if (GetIO_ByEntityName(16) == 0)
-    {
-        ClrEntityTabVal(16)
-    }
+        ClrEntityTabVal(16);
     if (GetIO_ByEntityName(17) == 0)
-    {
-        ClrEntityTabVal(17)
-    }
+        ClrEntityTabVal(17);
     if (GetIO_ByEntityName(18) == 0)
-    {
-        ClrEntityTabVal(18)
-    }
+        ClrEntityTabVal(18);
     if (GetIO_ByEntityName(19) == 0)
-    {
-        ClrEntityTabVal(19)
-    }
+        ClrEntityTabVal(19);
     if (GetIO_ByEntityName(20) == 0)
-    {
-        ClrEntityTabVal(20)
-    }
+        ClrEntityTabVal(20);
     if (GetIO_ByEntityName(21) == 0)
-    {
-        ClrEntityTabVal(21)
-    }
+        ClrEntityTabVal(21);
     if (GetIO_ByEntityName(22) == 0)
-    {
-        ClrEntityTabVal(22)
-    }
+        ClrEntityTabVal(22);
     if (GetIO_ByEntityName(23) == 0)
-    {
-        ClrEntityTabVal(23)
-    }
+        ClrEntityTabVal(23);
     if (GetIO_ByEntityName(24) == 0)
-    {
-        ClrEntityTabVal(24)
-    }
+        ClrEntityTabVal(24);
     if (GetIO_ByEntityName(25) == 0)
-    {
-        ClrEntityTabVal(25)
-    }
+        ClrEntityTabVal(25);
     if (GetIO_ByEntityName(26) == 0)
-    {
-        ClrEntityTabVal(26)
-    }
+        ClrEntityTabVal(26);
     if (GetIO_ByEntityName(27) == 0)
-    {
-        ClrEntityTabVal(27)
-    }
+        ClrEntityTabVal(27);
     if (GetIO_ByEntityName(28) == 0)
-    {
-        ClrEntityTabVal(28)
-    }
+        ClrEntityTabVal(28);
     if (GetIO_ByEntityName(29) == 0)
-    {
-        ClrEntityTabVal(29)
-    }
+        ClrEntityTabVal(29);
     if (GetIO_ByEntityName(30) == 0)
-    {
-        ClrEntityTabVal(30)
-    }
+        ClrEntityTabVal(30);
     if (GetIO_ByEntityName(31) == 0)
-    {
-        ClrEntityTabVal(31)
-    }
+        ClrEntityTabVal(31);
     if (GetIO_ByEntityName(32) == 0)
-    {
-        ClrEntityTabVal(32)
-    }
+        ClrEntityTabVal(32);
     if (GetIO_ByEntityName(33) == 0)
-    {
-        ClrEntityTabVal(33)
-    }
+        ClrEntityTabVal(33);
     if (GetIO_ByEntityName(34) == 0)
-    {
-        ClrEntityTabVal(34)
-    }
+        ClrEntityTabVal(34);
     if (GetIO_ByEntityName(35) == 0)
-    {
-        ClrEntityTabVal(35)
-    }
+        ClrEntityTabVal(35);
     if (GetIO_ByEntityName(36) == 0)
-    {
-        ClrEntityTabVal(36)
-    }
+        ClrEntityTabVal(36);
     if (GetIO_ByEntityName(37) == 0)
-    {
-        ClrEntityTabVal(37)
-    }
+        ClrEntityTabVal(37);
     if (GetIO_ByEntityName(38) == 0)
-    {
-        ClrEntityTabVal(38)
-    }
+        ClrEntityTabVal(38);
     if (GetIO_ByEntityName(39) == 0)
-    {
-        ClrEntityTabVal(39)
-    }
+        ClrEntityTabVal(39);
     if (GetIO_ByEntityName(40) == 0)
-    {
-        ClrEntityTabVal(40)
-    }
+        ClrEntityTabVal(40);
     if (GetIO_ByEntityName(41) == 0)
-    {
-        ClrEntityTabVal(41)
-    }
+        ClrEntityTabVal(41);
     if (GetIO_ByEntityName(42) == 0)
-    {
-        ClrEntityTabVal(42)
-    }
+        ClrEntityTabVal(42);
     if (GetIO_ByEntityName(43) == 0)
-    {
-        ClrEntityTabVal(43)
-    }
+        ClrEntityTabVal(43);
     if (GetIO_ByEntityName(44) == 0)
-    {
-        ClrEntityTabVal(44)
-    }
+        ClrEntityTabVal(44);
     if (GetIO_ByEntityName(45) == 0)
-    {
-        ClrEntityTabVal(45)
-    }
+        ClrEntityTabVal(45);
     if (GetIO_ByEntityName(46) == 0)
-    {
-        ClrEntityTabVal(46)
-    }
+        ClrEntityTabVal(46);
     if (GetIO_ByEntityName(47) == 0)
-    {
-        ClrEntityTabVal(47)
-    }
+        ClrEntityTabVal(47);
     if (GetIO_ByEntityName(48) == 0)
-    {
-        ClrEntityTabVal(48)
-    }
+        ClrEntityTabVal(48);
     if (GetIO_ByEntityName(49) == 0)
-        ClrEntityTabVal(49)
-
+        ClrEntityTabVal(49);
     if (GetIO_ByEntityName(50) == 0)
-    {
-        ClrEntityTabVal(50)
-    }
+        ClrEntityTabVal(50);
     if (GetIO_ByEntityName(51) == 0)
-    {
-        ClrEntityTabVal(51)
-    }
+        ClrEntityTabVal(51);
     if (GetIO_ByEntityName(52) == 0)
-    {
-        ClrEntityTabVal(52)
-    }
+        ClrEntityTabVal(52);
     if (GetIO_ByEntityName(53) == 0)
-    {
-        ClrEntityTabVal(53)
-    }
+        ClrEntityTabVal(53);
     if (GetIO_ByEntityName(54) == 0)
-    {
-        ClrEntityTabVal(54)
-    }
+        ClrEntityTabVal(54);
     if (GetIO_ByEntityName(55) == 0)
-    {
-        ClrEntityTabVal(55)
-    }
+        ClrEntityTabVal(55);
     if (GetIO_ByEntityName(56) == 0)
-    {
-        ClrEntityTabVal(56)
-    }
+        ClrEntityTabVal(56);
     if (GetIO_ByEntityName(57) == 0)
-    {
-        ClrEntityTabVal(57)
-    }
-
+        ClrEntityTabVal(57);
     if (GetIO_ByEntityName(58) == 0)
-    {
-        ClrEntityTabVal(58)
-    }
+        ClrEntityTabVal(58);
     if (GetIO_ByEntityName(59) == 0)
-    {
-        ClrEntityTabVal(59)
-    }
+        ClrEntityTabVal(59);
     if (GetIO_ByEntityName(60) == 0)
-    {
-        ClrEntityTabVal(60)
-    }
+        ClrEntityTabVal(60);
     if (GetIO_ByEntityName(61) == 0)
-    {
-        ClrEntityTabVal(61)
-    }
+        ClrEntityTabVal(61);
     if (GetIO_ByEntityName(62) == 0)
-    {
-        ClrEntityTabVal(62)
-    }
+        ClrEntityTabVal(62);
     if (GetIO_ByEntityName(63) == 0)
-    {
-        ClrEntityTabVal(63)
-    }
+        ClrEntityTabVal(63);
     if (GetIO_ByEntityName(64) == 0)
-    {
-        ClrEntityTabVal(64)
-    }
+        ClrEntityTabVal(64);
     if (GetIO_ByEntityName(65) == 0)
-    {
-        ClrEntityTabVal(65)
-    }
+        ClrEntityTabVal(65);
     if (GetIO_ByEntityName(66) == 0)
-    {
-        ClrEntityTabVal(66)
-    }
+        ClrEntityTabVal(66);
     if (GetIO_ByEntityName(67) == 0)
-    {
-        ClrEntityTabVal(67)
-    }
+        ClrEntityTabVal(67);
     if (GetIO_ByEntityName(68) == 0)
-    {
-        ClrEntityTabVal(68)
-    }
+        ClrEntityTabVal(68);
     if (GetIO_ByEntityName(69) == 0)
-    {
-        ClrEntityTabVal(69)
-    }
+        ClrEntityTabVal(69);
     if (GetIO_ByEntityName(70) == 0)
-    {
-        ClrEntityTabVal(70)
-    }
+        ClrEntityTabVal(70);
     if (GetIO_ByEntityName(71) == 0)
-    {
-        ClrEntityTabVal(71)
-    }
+        ClrEntityTabVal(71);
     if (GetIO_ByEntityName(72) == 0)
-    {
-        ClrEntityTabVal(72)
-    }
+        ClrEntityTabVal(72);
     if (GetIO_ByEntityName(73) == 0)
-    {
-        ClrEntityTabVal(73)
-    }
+        ClrEntityTabVal(73);
     if (GetIO_ByEntityName(74) == 0)
-    {
-        ClrEntityTabVal(74)
-    }
+        ClrEntityTabVal(74);
     if (GetIO_ByEntityName(75) == 0)
-    {
-        ClrEntityTabVal(75)
-    }
+        ClrEntityTabVal(75);
     if (GetIO_ByEntityName(76) == 0)
-    {
-        ClrEntityTabVal(76)
-    }
+        ClrEntityTabVal(76);
     if (GetIO_ByEntityName(77) == 0)
-    {
-        ClrEntityTabVal(77)
-    }
+        ClrEntityTabVal(77);
     if (GetIO_ByEntityName(78) == 0)
-    {
-        ClrEntityTabVal(78)
-    }
+        ClrEntityTabVal(78);
     if (GetIO_ByEntityName(79) == 0)
-    {
-        ClrEntityTabVal(79)
-    }
+        ClrEntityTabVal(79);
     if (GetIO_ByEntityName(80) == 0)
-    {
-        ClrEntityTabVal(80)
-    }
+        ClrEntityTabVal(80);
     if (GetIO_ByEntityName(81) == 0)
-    {
-        ClrEntityTabVal(81)
-    }
+        ClrEntityTabVal(81);
     if (GetIO_ByEntityName(82) == 0)
-    {
-        ClrEntityTabVal(82)
-    }
+        ClrEntityTabVal(82);
     if (GetIO_ByEntityName(83) == 0)
-    {
-        ClrEntityTabVal(83)
-    }
+        ClrEntityTabVal(83);
     if (GetIO_ByEntityName(84) == 0)
-    {
-        ClrEntityTabVal(84)
-    }
+        ClrEntityTabVal(84);
     if (GetIO_ByEntityName(85) == 0)
-    {
-        ClrEntityTabVal(85)
-    }
+        ClrEntityTabVal(85);
     if (GetIO_ByEntityName(86) == 0)
-    {
-        ClrEntityTabVal(86)
-    }
+        ClrEntityTabVal(86);
     if (GetIO_ByEntityName(87) == 0)
-    {
-        ClrEntityTabVal(87)
-    }
+        ClrEntityTabVal(87);
     if (GetIO_ByEntityName(88) == 0)
-    {
-        ClrEntityTabVal(88)
-    }
+        ClrEntityTabVal(88);
     if (GetIO_ByEntityName(89) == 0)
-    {
-        ClrEntityTabVal(89)
-    }
+        ClrEntityTabVal(89);
     if (GetIO_ByEntityName(90) == 0)
-    {
-        ClrEntityTabVal(90)
-    }
+        ClrEntityTabVal(90);
     if (GetIO_ByEntityName(91) == 0)
-    {
-        ClrEntityTabVal(91)
-    }
+        ClrEntityTabVal(91);
     if (GetIO_ByEntityName(92) == 0)
-    {
-        ClrEntityTabVal(92)
-    }
+        ClrEntityTabVal(92);
     if (GetIO_ByEntityName(93) == 0)
-    {
-        ClrEntityTabVal(93)
-    }
+        ClrEntityTabVal(93);
     if (GetIO_ByEntityName(94) == 0)
-    {
-        ClrEntityTabVal(94)
-    }
+        ClrEntityTabVal(94);
     if (GetIO_ByEntityName(95) == 0)
-    {
-        ClrEntityTabVal(95)
-    }
+        ClrEntityTabVal(95);
     if (GetIO_ByEntityName(96) == 0)
-    {
-        ClrEntityTabVal(96)
-    }
+        ClrEntityTabVal(96);
     if (GetIO_ByEntityName(97) == 0)
-    {
-        ClrEntityTabVal(97)
-    }
+        ClrEntityTabVal(97);
     if (GetIO_ByEntityName(98) == 0)
-    {
-        ClrEntityTabVal(98)
-    }
+        ClrEntityTabVal(98);
     if (GetIO_ByEntityName(99) == 0)
-    {
-        ClrEntityTabVal(99)
-    }
+        ClrEntityTabVal(99);
     if (GetIO_ByEntityName(100) == 0)
-    {
-        ClrEntityTabVal(100)
-    }
+        ClrEntityTabVal(100);
     if (GetIO_ByEntityName(101) == 0)
-    {
-        ClrEntityTabVal(101)
-    }
+        ClrEntityTabVal(101);
     if (GetIO_ByEntityName(102) == 0)
-    {
-        ClrEntityTabVal(102)
-    }
+        ClrEntityTabVal(102);
     if (GetIO_ByEntityName(103) == 0)
-    {
-        ClrEntityTabVal(103)
-    }
+        ClrEntityTabVal(103);
     if (GetIO_ByEntityName(104) == 0)
-    {
-        ClrEntityTabVal(104)
-    }
+        ClrEntityTabVal(104);
     if (GetIO_ByEntityName(105) == 0)
-    {
-        ClrEntityTabVal(105)
-    }
+        ClrEntityTabVal(105);
     if (GetIO_ByEntityName(106) == 0)
-    {
-        ClrEntityTabVal(106)
-    }
+        ClrEntityTabVal(106);
     if (GetIO_ByEntityName(107) == 0)
-    {
-        ClrEntityTabVal(107)
-    }
+        ClrEntityTabVal(107);
     if (GetIO_ByEntityName(108) == 0)
-    {
-        ClrEntityTabVal(108)
-    }
+        ClrEntityTabVal(108);
     if (GetIO_ByEntityName(109) == 0)
-    {
-        ClrEntityTabVal(109)
-    }
+        ClrEntityTabVal(109);
     if (GetIO_ByEntityName(110) == 0)
-    {
-        ClrEntityTabVal(110)
-    }
+        ClrEntityTabVal(110);
     if (GetIO_ByEntityName(111) == 0)
-    {
-        ClrEntityTabVal(111)
-    }
+        ClrEntityTabVal(111);
     if (GetIO_ByEntityName(112) == 0)
-    {
-        ClrEntityTabVal(112)
-    }
+        ClrEntityTabVal(112);
     if (GetIO_ByEntityName(113) == 0)
-    {
-        ClrEntityTabVal(113)
-    }
+        ClrEntityTabVal(113);
     if (GetIO_ByEntityName(114) == 0)
-    {
-        ClrEntityTabVal(114)
-    }
+        ClrEntityTabVal(114);
     if (GetIO_ByEntityName(115) == 0)
-    {
-        ClrEntityTabVal(115)
-    }
+        ClrEntityTabVal(115);
     if (GetIO_ByEntityName(116) == 0)
-    {
-        ClrEntityTabVal(116)
-    }
+        ClrEntityTabVal(116);
     if (GetIO_ByEntityName(117) == 0)
-    {
-        ClrEntityTabVal(117)
-    }
+        ClrEntityTabVal(117);
     if (GetIO_ByEntityName(118) == 0)
-    {
-        ClrEntityTabVal(118)
-    }
+        ClrEntityTabVal(118);
     if (GetIO_ByEntityName(119) == 0)
-    {
-        ClrEntityTabVal(119)
-    }
+        ClrEntityTabVal(119);
     if (GetIO_ByEntityName(120) == 0)
-    {
-        ClrEntityTabVal(120)
-    }
+        ClrEntityTabVal(120);
     if (GetIO_ByEntityName(121) == 0)
-    {
-        ClrEntityTabVal(121)
-    }
+        ClrEntityTabVal(121);
     if (GetIO_ByEntityName(122) == 0)
-    {
-        ClrEntityTabVal(122)
-    }
+        ClrEntityTabVal(122);
     if (GetIO_ByEntityName(123) == 0)
-    {
-        ClrEntityTabVal(123)
-    }
+        ClrEntityTabVal(123);
     if (GetIO_ByEntityName(124) == 0)
-    {
-        ClrEntityTabVal(124)
-    }
+        ClrEntityTabVal(124);
     if (GetIO_ByEntityName(125) == 0)
-    {
-        ClrEntityTabVal(125)
-    }
+        ClrEntityTabVal(125);
     if (GetIO_ByEntityName(126) == 0)
-    {
-        ClrEntityTabVal(126)
-    }
+        ClrEntityTabVal(126);
     if (GetIO_ByEntityName(127) == 0)
-    {
-        ClrEntityTabVal(127)
-    }
+        ClrEntityTabVal(127);
     if (GetIO_ByEntityName(128) == 0)
-    {
-        ClrEntityTabVal(128)
-    }
+        ClrEntityTabVal(128);
     if (GetIO_ByEntityName(129) == 0)
-    {
-        ClrEntityTabVal(129)
-    }
+        ClrEntityTabVal(129);
     if (GetIO_ByEntityName(130) == 0)
-    {
-        ClrEntityTabVal(130)
-    }
+        ClrEntityTabVal(130);
     if (GetIO_ByEntityName(131) == 0)
-    {
-        ClrEntityTabVal(131)
-    }
+        ClrEntityTabVal(131);
     if (GetIO_ByEntityName(132) == 0)
-    {
-        ClrEntityTabVal(132)
-    }
+        ClrEntityTabVal(132);
     if (GetIO_ByEntityName(133) == 0)
-    {
-        ClrEntityTabVal(133)
-    }
+        ClrEntityTabVal(133);
     if (GetIO_ByEntityName(134) == 0)
-    {
-        ClrEntityTabVal(134)
-    }
+        ClrEntityTabVal(134);
     if (GetIO_ByEntityName(135) == 0)
-    {
-        ClrEntityTabVal(135)
-    }
+        ClrEntityTabVal(135);
     if (GetIO_ByEntityName(136) == 0)
-    {
-        ClrEntityTabVal(136)
-    }
+        ClrEntityTabVal(136);
     if (GetIO_ByEntityName(137) == 0)
-    {
-        ClrEntityTabVal(137)
-    }
+        ClrEntityTabVal(137);
     if (GetIO_ByEntityName(138) == 0)
-    {
-        ClrEntityTabVal(138)
-    }
+        ClrEntityTabVal(138);
     if (GetIO_ByEntityName(139) == 0)
-    {
-        ClrEntityTabVal(139)
-    }
+        ClrEntityTabVal(139);
     if (GetIO_ByEntityName(140) == 0)
-    {
-        ClrEntityTabVal(140)
-    }
+        ClrEntityTabVal(140);
     if (GetIO_ByEntityName(141) == 0)
-    {
-        ClrEntityTabVal(141)
-    }
+        ClrEntityTabVal(141);
     if (GetIO_ByEntityName(142) == 0)
-    {
-        ClrEntityTabVal(142)
-    }
+        ClrEntityTabVal(142);
     if (GetIO_ByEntityName(143) == 0)
-    {
-        ClrEntityTabVal(143)
-    }
+        ClrEntityTabVal(143);
     if (GetIO_ByEntityName(144) == 0)
-    {
-        ClrEntityTabVal(144)
-    }
+        ClrEntityTabVal(144);
     if (GetIO_ByEntityName(145) == 0)
-    {
-        ClrEntityTabVal(145)
-    }
+        ClrEntityTabVal(145);
     if (GetIO_ByEntityName(146) == 0)
-    {
-        ClrEntityTabVal(146)
-    }
+        ClrEntityTabVal(146);
     if (GetIO_ByEntityName(147) == 0)
-    {
-        ClrEntityTabVal(147)
-    }
+        ClrEntityTabVal(147);
     if (GetIO_ByEntityName(148) == 0)
-    {
-        ClrEntityTabVal(148)
-    }
+        ClrEntityTabVal(148);
     if (GetIO_ByEntityName(149) == 0)
-    {
-        ClrEntityTabVal(149)
-    }
+        ClrEntityTabVal(149);
     if (GetIO_ByEntityName(150) == 0)
-    {
-        ClrEntityTabVal(150)
-    }
+        ClrEntityTabVal(150);
     if (GetIO_ByEntityName(151) == 0)
-    {
-        ClrEntityTabVal(151)
-    }
+        ClrEntityTabVal(151);
     if (GetIO_ByEntityName(152) == 0)
-    {
-        ClrEntityTabVal(152)
-    }
+        ClrEntityTabVal(152);
     if (GetIO_ByEntityName(153) == 0)
-    {
-        ClrEntityTabVal(153)
-    }
+        ClrEntityTabVal(153);
     if (GetIO_ByEntityName(154) == 0)
-    {
-        ClrEntityTabVal(154)
-    }
+        ClrEntityTabVal(154);
     if (GetIO_ByEntityName(155) == 0)
-    {
-        ClrEntityTabVal(155)
-    }
+        ClrEntityTabVal(155);
     if (GetIO_ByEntityName(156) == 0)
-    {
-        ClrEntityTabVal(156)
-    }
+        ClrEntityTabVal(156);
     if (GetIO_ByEntityName(157) == 0)
-    {
-        ClrEntityTabVal(157)
-    }
+        ClrEntityTabVal(157);
     if (GetIO_ByEntityName(158) == 0)
-    {
-        ClrEntityTabVal(158)
-    }
+        ClrEntityTabVal(158);
     if (GetIO_ByEntityName(159) == 0)
-    {
-        ClrEntityTabVal(159)
-    }
+        ClrEntityTabVal(159);
     if (GetIO_ByEntityName(160) == 0)
-    {
-        ClrEntityTabVal(160)
-    }
+        ClrEntityTabVal(160);
     if (GetIO_ByEntityName(161) == 0)
-    {
-        ClrEntityTabVal(161)
-    }
+        ClrEntityTabVal(161);
     if (GetIO_ByEntityName(162) == 0)
-    {
-        ClrEntityTabVal(162)
-    }
+        ClrEntityTabVal(162);
     if (GetIO_ByEntityName(163) == 0)
-    {
-        ClrEntityTabVal(163)
-    }
+        ClrEntityTabVal(163);
     if (GetIO_ByEntityName(164) == 0)
-    {
-        ClrEntityTabVal(164)
-    }
+        ClrEntityTabVal(164);
     if (GetIO_ByEntityName(165) == 0)
-    {
-        ClrEntityTabVal(165)
-    }
+        ClrEntityTabVal(165);
     if (GetIO_ByEntityName(166) == 0)
-    {
-        ClrEntityTabVal(166)
-    }
+        ClrEntityTabVal(166);
     if (GetIO_ByEntityName(167) == 0)
-    {
-        ClrEntityTabVal(167)
-    }
+        ClrEntityTabVal(167);
     if (GetIO_ByEntityName(168) == 0)
-    {
-        ClrEntityTabVal(168)
-    }
+        ClrEntityTabVal(168);
     if (GetIO_ByEntityName(169) == 0)
-    {
-        ClrEntityTabVal(169)
-    }
+        ClrEntityTabVal(169);
     if (GetIO_ByEntityName(170) == 0)
-    {
-        ClrEntityTabVal(170)
-    }
+        ClrEntityTabVal(170);
     if (GetIO_ByEntityName(171) == 0)
-    {
-        ClrEntityTabVal(171)
-    }
+        ClrEntityTabVal(171);
     if (GetIO_ByEntityName(172) == 0)
-    {
-        ClrEntityTabVal(172)
-    }
+        ClrEntityTabVal(172);
     if (GetIO_ByEntityName(173) == 0)
-    {
-        ClrEntityTabVal(173)
-    }
+        ClrEntityTabVal(173);
     if (GetIO_ByEntityName(174) == 0)
-    {
-        ClrEntityTabVal(174)
-    }
-    if (GetIO_ByEntityName(175) == 0)
-    {
-        ClrEntityTabVal(175)
-    }
+        ClrEntityTabVal(174);
 }
 
 // e.g. IO_PUNCHER_PISTON_UP_ENTITY = 20
