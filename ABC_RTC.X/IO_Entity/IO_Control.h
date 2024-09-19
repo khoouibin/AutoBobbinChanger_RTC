@@ -9,6 +9,7 @@
 
 #ifndef _IO_CONTROL_H_
 #define	_IO_CONTROL_H_
+#include <IO_Entity.h>
 
 void IO_Init_Ports(void);						// Init the TRIS, ANSEL, LAT of all ports
 void IO_Init_PPS(void);							// Re-map the IO Pins for the peripheral functions
@@ -19,6 +20,9 @@ int IO_Entity_Mgr_Get_Entity( int Entity_Port_Or_Act_ID );
 int IO_Entity_Mgr_Set_Entity( int Entity_Port_Or_Act_ID , int Value );
 
 void Get_EntityTable(unsigned char *data, unsigned char *data_size);
+char GetIO_ByEntityName(IO_Entity_Name_t entitynumber);
+char SetValue_ByEntityName(IO_Entity_Name_t entitynumber);
+char ClrValue_ByEntityName(IO_Entity_Name_t entitynumber);
 
 #endif	// _IO_CONTROL_H_
 

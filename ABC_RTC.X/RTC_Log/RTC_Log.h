@@ -2,6 +2,8 @@
 #define	_RTC_Log_H_
 #include "usb_app.h"
 
+#define AT_20000h __attribute__((space(prog), address(0x20000),section(".RTC_LogTab")))
+
 enum LogMask
 {
     Critial_MASK = 0x01,

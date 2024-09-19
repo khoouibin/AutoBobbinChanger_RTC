@@ -12,6 +12,7 @@
 #include "RTC_IODef.h"
 #include "RTC_IOports.h"
 #include "IO_Control.h"
+#include "IO_Entity.h"
 
 void IO_Init_Ports(void)
 {
@@ -86,5 +87,42 @@ int IO_Toggle(IO_Port_Id_t IO_Id)
 	{
 		(*(IO_Reg_Addr[IO_Ports_Table[IO_Id].Reg_ID])) |= IO_Ports_Table[IO_Id].IO_Mask;
 	}
+	return 0;
+}
+
+char GetIO_ByEntityName(IO_Entity_Name_t entitynumber)
+{
+	IO_Port_t *PortAddr;
+	unsigned int tmp;
+	char bit_value;
+	if (Entities_IO_Port_Def[entitynumber].PortReg == UNDEFINED)
+		return 0xff;
+	PortAddr = IO_Reg_Addr[Entities_IO_Port_Def[entitynumber].PortReg];
+    tmp = (*PortAddr) & (Entities_IO_Port_Def[entitynumber].PortBitMask);
+	bit_value = (tmp > 0) ? 1 : 0;
+    return bit_value;
+}
+
+char SetValue_ByEntityName(IO_Entity_Name_t entitynumber)
+{
+	IO_Port_t *PortAddr;
+	if (Entities_IO_Port_Def[entitynumber].PortReg == UNDEFINED)
+		return 0xff;
+	if (Entities_IO_Port_Def[entitynumber].PortBitType != IO_OUTPUT)
+		return 0xff;
+    PortAddr = IO_Reg_Addr[Entities_IO_Port_Def[entitynumber].PortReg];
+    *PortAddr = *PortAddr | (Entities_IO_Port_Def[entitynumber].PortBitMask);
+	return 0;
+}
+
+char ClrValue_ByEntityName(IO_Entity_Name_t entitynumber)
+{
+	IO_Port_t *PortAddr;
+	if (Entities_IO_Port_Def[entitynumber].PortReg == UNDEFINED)
+		return 0xff;
+	if (Entities_IO_Port_Def[entitynumber].PortBitType != IO_OUTPUT)
+		return 0xff;
+    PortAddr = IO_Reg_Addr[Entities_IO_Port_Def[entitynumber].PortReg];
+    *PortAddr = (*PortAddr) & (~Entities_IO_Port_Def[entitynumber].PortBitMask);
 	return 0;
 }
