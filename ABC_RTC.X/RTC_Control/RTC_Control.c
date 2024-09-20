@@ -28,6 +28,9 @@ RTC_Control_State_t RTC_Control_Main(void)
 {
     USB_Task_msg_t Task_msg;
     CommonMsg_Actions_t res_CommonMsg;
+    usb_msg_entitytable_reply_t entity_tab_reply;
+    Refresh_EntityTableMask();
+    //char log_msg[60];
     bool new_msg;
     control_state = RTC_CONTROL_STATE_UNINIT;
     while (control_state != RTC_CONTROL_RESET)
@@ -65,6 +68,33 @@ RTC_Control_State_t RTC_Control_Main(void)
             {
                 reset_en = -1;
                 control_state = RTC_CONTROL_RESET;
+            }
+        }
+
+        if (Get_GetEntityTableMode() == SubFunc_table_get_changed || Get_GetEntityTableMode() == SubFunc_table_get_period)
+        {
+            if (SysTimer_IsTimerExpiered(RTC_CONTROL_ENTITYTABLE_POLLING) == 1)
+            {
+                SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_ENTITYTABLE_POLLING, Get_GetEntityTableReplyPeriod());
+                // snprintf(log_msg, 60, "entity table mode:%d",Get_GetEntityTableMode());
+                // RTC_LogMsg(Debug_Lev, log_msg);
+                entity_tab_reply.cmd_id_rep = RespPositive_EntityTable;
+                entity_tab_reply.sub_func = Get_GetEntityTableMode();
+                entity_tab_reply.reply_period = Get_GetEntityTableReplyPeriod();
+                entity_tab_reply.table_size = 0;
+
+                if (Get_GetEntityTableMode() == SubFunc_table_get_changed)
+                {
+                    if (Is_EntityTable_Changed(entity_tab_reply.data, &entity_tab_reply.table_size) == 1)
+                    {
+                        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, sizeof(usb_msg_entitytable_t));
+                    }
+                }
+                else
+                {
+                    Get_EntityTable(entity_tab_reply.data, &entity_tab_reply.table_size);
+                    USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, sizeof(usb_msg_entitytable_t));
+                }
             }
         }
     }
@@ -167,9 +197,40 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
             entity_tab_reply.cmd_id_rep = RespPositive_EntityTable;
             entity_tab_reply.sub_func = p_entity_tab_task->sub_func;
             entity_tab_reply.reply_period = Dummy_00;
-            memset(entity_tab_reply.data, 0, sizeof(entity_tab_reply.data));
+            //LATHbits.LATH15 = 1;
             Get_EntityTable(entity_tab_reply.data, &entity_tab_reply.table_size);
+            //LATHbits.LATH15 = 0;
             USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, sizeof(usb_msg_entitytable_t));
+        }
+        else if(p_entity_tab_task->sub_func == SubFunc_table_get_changed)
+        {
+            entity_tab_reply.cmd_id_rep = RespPositive_EntityTable;
+            entity_tab_reply.sub_func = p_entity_tab_task->sub_func;
+            entity_tab_reply.reply_period = Dummy_00;
+            entity_tab_reply.table_size = 0;
+            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_ENTITYTABLE_POLLING, Get_GetEntityTableReplyPeriod());
+            Set_GetEntityTableMode((enum EntityTable_SubFunc)p_entity_tab_task->sub_func);
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, 4);
+        }
+        else if(p_entity_tab_task->sub_func == SubFunc_table_get_period)
+        {
+            entity_tab_reply.cmd_id_rep = RespPositive_EntityTable;
+            entity_tab_reply.sub_func = p_entity_tab_task->sub_func;
+            entity_tab_reply.reply_period = p_entity_tab_task->reply_period;
+            entity_tab_reply.table_size = 0;
+            Set_GetEntityReplyPeriod(p_entity_tab_task->reply_period);
+            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_ENTITYTABLE_POLLING, Get_GetEntityTableReplyPeriod());
+            Set_GetEntityTableMode((enum EntityTable_SubFunc)p_entity_tab_task->sub_func);
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, 4);
+        }
+        else if(p_entity_tab_task->sub_func == SubFunc_table_get_off)
+        {
+            entity_tab_reply.cmd_id_rep = RespPositive_EntityTable;
+            entity_tab_reply.sub_func = p_entity_tab_task->sub_func;
+            entity_tab_reply.reply_period = Dummy_00;
+            entity_tab_reply.table_size = 0;
+            Set_GetEntityTableMode((enum EntityTable_SubFunc)p_entity_tab_task->sub_func);
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, 4);
         }
         res = CONTINUE;
         break;
@@ -195,11 +256,11 @@ void RTC_Control_Handler_Uninit()
         if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
         { 
             SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
-            entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
-            if (entity_val == 0)
-                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
-            else
-                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 0);
+            // entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
+            // if (entity_val == 0)
+            //     IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
+            // else
+            //     IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 0);
 
             //snprintf(log_msg, 60, "IO_PUNCHER_PISTON_UP_ENTITY:%d",(!entity_val));
             

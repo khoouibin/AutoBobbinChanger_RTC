@@ -95,6 +95,8 @@ char GetIO_ByEntityName(IO_Entity_Name_t entitynumber)
 	IO_Port_t *PortAddr;
 	unsigned int tmp;
 	char bit_value;
+	if (entitynumber>=IO_TABLE_MAX)
+		return 0xff;
 	if (Entities_IO_Port_Def[entitynumber].PortReg == UNDEFINED)
 		return 0xff;
 	PortAddr = IO_Reg_Addr[Entities_IO_Port_Def[entitynumber].PortReg];
@@ -103,9 +105,20 @@ char GetIO_ByEntityName(IO_Entity_Name_t entitynumber)
     return bit_value;
 }
 
+char GetMask_ByEntityName(IO_Entity_Name_t entitynumber)
+{
+	char bit_value;
+	if (entitynumber>=IO_TABLE_MAX)
+		return 0xff;
+	bit_value = Entities_IO_Port_Def[entitynumber].BitComp;
+    return bit_value;
+}
+
 char SetValue_ByEntityName(IO_Entity_Name_t entitynumber)
 {
 	IO_Port_t *PortAddr;
+	if (entitynumber>=IO_TABLE_MAX)
+		return 0xff;
 	if (Entities_IO_Port_Def[entitynumber].PortReg == UNDEFINED)
 		return 0xff;
 	if (Entities_IO_Port_Def[entitynumber].PortBitType != IO_OUTPUT)
@@ -118,6 +131,8 @@ char SetValue_ByEntityName(IO_Entity_Name_t entitynumber)
 char ClrValue_ByEntityName(IO_Entity_Name_t entitynumber)
 {
 	IO_Port_t *PortAddr;
+	if (entitynumber>=IO_TABLE_MAX)
+		return 0xff;
 	if (Entities_IO_Port_Def[entitynumber].PortReg == UNDEFINED)
 		return 0xff;
 	if (Entities_IO_Port_Def[entitynumber].PortBitType != IO_OUTPUT)

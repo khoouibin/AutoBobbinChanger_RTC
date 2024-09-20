@@ -37,6 +37,7 @@ typedef enum
 {
 	RTC_CONTROL_WINK = 0,
     RTC_CONTROL_RESET_DELAY = 1,
+    RTC_CONTROL_ENTITYTABLE_POLLING = 2,
 	RTC_CONTROL_MAX,
 } RTC_Control_Timer_type_t;
 

@@ -94,7 +94,6 @@ enum EntityTable_SubFunc
 	SubFunc_table_get_instant = 1,
 	SubFunc_table_get_period = 2,
 	SubFunc_table_get_changed = 3,
-	SubFunc_table_set = 5,
 	SubFunc_entitytable_max,
 };
 

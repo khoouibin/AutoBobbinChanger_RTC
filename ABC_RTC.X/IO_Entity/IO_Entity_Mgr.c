@@ -17,6 +17,19 @@
 #include "xc.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "usb_app.h"
+#define SetEntityTabVal(x) { gEntityTable[x / 8] |= (1 << (x % 8)); }
+#define ClrEntityTabVal(x) { gEntityTable[x / 8] &= (1 << (x % 8)) ^ 0xff; }
+#define ClrEntityCompMaskVal(x) { gEntityTable_CompMask[x / 8] &= (1 << (x % 8)) ^ 0xff; }
+#define C_MIN_ENTITYTABLE_POLLING_ms 50
+#define C_MAX_ENTITYTABLE_POLLING_ms 250
+
+typedef struct
+{
+    char entity_table_reply_mode;
+    unsigned char polling_period_ms;
+} EntityTab_Reply_Mode_t;
+
 
 typedef struct
 {
@@ -265,6 +278,11 @@ int IO_Entity_Mgr_Set_Entity(int Entity_Port_Or_Act_ID, int Value)
 #define ENTITY_TAB_SIZE 22
 static unsigned char gEntityTable[ENTITY_TAB_SIZE];
 static unsigned char gEntityTable_Backup[ENTITY_TAB_SIZE];
+static unsigned char gEntityTable_CompMask[ENTITY_TAB_SIZE];
+static EntityTab_Reply_Mode_t gEntityTabReplyMode ={0,0};
+
+// static unsigned char gGetEntityTable_Mode = SubFunc_table_get_off;
+// static unsigned char gGetEntityTable_PollingPeriod = SubFunc_table_get_off;
 
 char Get_EntityTable_Idx_Value(unsigned char entity_num)
 {
@@ -296,9 +314,6 @@ void Refresh_EntityTable_by_func()
     }
 }
 
-#define SetEntityTabVal(x) { gEntityTable[x / 8] |= (1 << (x % 8)); }
-#define ClrEntityTabVal(x) { gEntityTable[x / 8] &= (1 << (x % 8)) ^ 0xff; }
-
 void Refresh_EntityTable_by_macro01()
 {
     unsigned char i = 0;
@@ -315,8 +330,20 @@ void Refresh_EntityTable_by_macro01()
 
 void Refresh_EntityTable_by_macro02()
 {
+    unsigned char i = 0;
+    char entity_value;
     memset(gEntityTable, 0xff, ENTITY_TAB_SIZE);
+    for (i = 0; i < IO_TABLE_MAX; i++)
+    {
+        entity_value = GetIO_ByEntityName(i);
+        if (entity_value == 0)
+            ClrEntityTabVal(i);
+    }
+}
 
+void Refresh_EntityTable_by_macro03()
+{
+    memset(gEntityTable, 0xff, ENTITY_TAB_SIZE);
     if (GetIO_ByEntityName(0) == 0)
         ClrEntityTabVal(0);
     if (GetIO_ByEntityName(1) == 0)
@@ -669,6 +696,31 @@ void Refresh_EntityTable_by_macro02()
         ClrEntityTabVal(174);
 }
 
+char EntityTable_Compare()
+{
+   char res = 0;
+   unsigned char i;
+   unsigned char tmp, cmp_res;
+   Refresh_EntityTable_by_macro03();
+   for (i = 0; i < ENTITY_TAB_SIZE; i++)
+   {
+       tmp = gEntityTable[i] ^ gEntityTable_Backup[i];
+       cmp_res = tmp & gEntityTable_CompMask[i];
+       if (cmp_res != 0)
+       {
+           res = 1;
+           break;
+       }
+   }
+   asm("NOP");
+   asm("NOP");
+
+   memcpy(gEntityTable_Backup, gEntityTable, sizeof(gEntityTable));
+   asm("NOP");
+   asm("NOP");
+   return res;
+}
+
 // e.g. IO_PUNCHER_PISTON_UP_ENTITY = 20
 //      IO_LOADER_GREEN_LAMP_ENTITY = 48
 //      IO_UT_WELDER_DEVICE_ON_ENTITY = 171
@@ -680,14 +732,73 @@ void Refresh_EntityTable_by_macro02()
 
 // escape: 
 // (1) 380usec -> Refresh_EntityTable_by_func
-// (2) 250usec -> Refresh_EntityTable_by_macro01
-// (3) 183 usec -> 
-//    175 times GetIO_ByEntityName + macro SetEntityTabVal/ClrEntityTabVal
-// (4) 165 usec -> Refresh_EntityTable_by_macro02
-
+// (2) 277usec -> Refresh_EntityTable_by_macro01
+// (3) 232usec -> Refresh_EntityTable_by_macro02
+// (3) 190usec -> Refresh_EntityTable_by_macro03
 void Get_EntityTable(unsigned char *data, unsigned char *data_size)
 {
-    Refresh_EntityTable_by_macro01();
-    memcpy(data, gEntityTable, sizeof(gEntityTable));
-    *data_size = sizeof(gEntityTable);
+   Refresh_EntityTable_by_macro03();
+   memcpy(data, gEntityTable, sizeof(gEntityTable));
+   *data_size = sizeof(gEntityTable);
+}
+
+char Is_EntityTable_Changed(unsigned char *data, unsigned char *data_size)
+{
+   char res = 0;
+   if (EntityTable_Compare() == 1)
+   {
+       memcpy(data, gEntityTable, sizeof(gEntityTable));
+       *data_size = sizeof(gEntityTable);
+       res = 1;
+   }
+   return res;
+}
+
+void Refresh_EntityTableMask()
+{
+    memset(gEntityTable_CompMask, 0xff, ENTITY_TAB_SIZE);
+    unsigned char i, mask_value;
+    for (i = 0; i < IO_TABLE_MAX; i++)
+    {
+        mask_value = GetMask_ByEntityName(i);
+        if (mask_value == 0)
+            ClrEntityCompMaskVal(i);
+    }
+}
+
+void Set_GetEntityTableMode(enum EntityTable_SubFunc mode)
+{
+    if (mode < SubFunc_entitytable_max)
+    {
+        gEntityTabReplyMode.entity_table_reply_mode = (char)mode;
+    }
+
+    if (gEntityTabReplyMode.entity_table_reply_mode == SubFunc_table_get_changed)
+    {
+        Set_GetEntityReplyPeriod(C_MIN_ENTITYTABLE_POLLING_ms);
+    }
+}
+
+char Get_GetEntityTableMode()
+{
+   return gEntityTabReplyMode.entity_table_reply_mode;
+}
+
+void Set_GetEntityReplyPeriod(unsigned char period_ms)
+{
+    unsigned char tmp;
+
+    if (period_ms < C_MIN_ENTITYTABLE_POLLING_ms)
+        tmp = C_MIN_ENTITYTABLE_POLLING_ms;
+    else if (period_ms > C_MAX_ENTITYTABLE_POLLING_ms)
+        tmp = C_MAX_ENTITYTABLE_POLLING_ms;
+    else
+        tmp = period_ms;
+
+    gEntityTabReplyMode.polling_period_ms = tmp;
+}
+
+unsigned char Get_GetEntityTableReplyPeriod()
+{
+   return gEntityTabReplyMode.polling_period_ms;
 }
