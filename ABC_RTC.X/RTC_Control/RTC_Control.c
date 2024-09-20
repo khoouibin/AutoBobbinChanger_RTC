@@ -198,6 +198,7 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
             entity_tab_reply.sub_func = p_entity_tab_task->sub_func;
             entity_tab_reply.reply_period = Dummy_00;
             //LATHbits.LATH15 = 1;
+            Set_GetEntityTableMode((enum EntityTable_SubFunc)p_entity_tab_task->sub_func);
             Get_EntityTable(entity_tab_reply.data, &entity_tab_reply.table_size);
             //LATHbits.LATH15 = 0;
             USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, sizeof(usb_msg_entitytable_t));
