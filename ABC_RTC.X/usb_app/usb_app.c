@@ -275,6 +275,11 @@ bool USB_Msg_Parser(USB_Task_msg_t *task_msg)
             snprintf(neg_msg, 60, "error message:%s", "subfunction out of range");
             USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
         }
+        else if (nrc_res == NRC_SIZE_EXCEED)
+        {
+            snprintf(neg_msg, 60, "error message:%s", "_size out of range");
+            USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
+        }
         else
         {
             snprintf(neg_msg, 60, "error message:%s", "unknown command message");
@@ -289,6 +294,8 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
     unsigned char res_code = NRC_CMD_NOT_FOUND;
     unsigned char i;
     usb_msg_log_t *p_log_task=(usb_msg_log_t *)task_msg;
+    usb_msg_entity_pack_t *p_entity_pack_task =(usb_msg_entity_pack_t*)task_msg;
+
     for (i = 0; i < Cmd_MAX; i++)
     {
         if (i == task_msg->cmd_id)
@@ -382,6 +389,9 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
                 break;
             }
         }
+        res_code = NRC_SIZE_EXCEED;
+        if (p_entity_pack_task->pack_size <= MSG_ENTITY_MAX_PACK_SIZE)
+            res_code = POSITIVE_CODE;
         break;
     }
     return res_code;
@@ -394,7 +404,7 @@ char USB_NegResp(unsigned char cmd_id, unsigned char neg_code, char* strmsg)
     neg_resp.resp_id = RespNeg;
     neg_resp.cmd_id = cmd_id;    
     neg_resp.neg_code = neg_code;
-    neg_resp.ignore = 0xff;
+    neg_resp.neg_argv = Dummy_ff;
     memcpy(neg_resp.data, strmsg, 60);
     USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&neg_resp, 64);
     return 0;

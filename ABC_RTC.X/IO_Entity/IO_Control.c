@@ -114,6 +114,17 @@ char GetMask_ByEntityName(IO_Entity_Name_t entitynumber)
     return bit_value;
 }
 
+char WriteValue_ByEntityName(IO_Entity_Name_t entitynumber, unsigned char entity_value)
+{
+	if (entitynumber>=IO_TABLE_MAX)
+		return 0xff;
+	if (entity_value == 0)
+		ClrValue_ByEntityName(entitynumber);
+	else if (entity_value == 1)
+		SetValue_ByEntityName(entitynumber);
+	return 0;
+}
+
 char SetValue_ByEntityName(IO_Entity_Name_t entitynumber)
 {
 	IO_Port_t *PortAddr;

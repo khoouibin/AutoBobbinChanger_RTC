@@ -112,12 +112,15 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
     usb_msg_log_t *p_log_task;
     usb_msg_log_reply_t log_task_resp;
     usb_msg_entitytable_t *p_entity_tab_task;
-    //usb_msg_entity_pack_t *p_entity_pack_task;
+    usb_msg_entity_pack_t *p_entity_pack_task;
     usb_msg_entitytable_reply_t entity_tab_reply;
+    usb_msg_entity_pack_reply_t entity_pack_reply;
 
     unsigned long reset_delay_cnt;
     char resp_msg[48];
     static unsigned int echo_cnt = 0;
+    unsigned char i;
+    unsigned char tmp1;
     switch (task_msg->cmd_id)
     {
     case Cmd_Echo:
@@ -236,6 +239,37 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
         res = CONTINUE;
         break;
 
+    case Cmd_EntityPack:
+        p_entity_pack_task = (usb_msg_entity_pack_t *)task_msg;
+        if (p_entity_pack_task->sub_func == SubFunc_pack_get)
+        {
+            entity_pack_reply.cmd_id_rep = RespPositive_EntityPack;
+            entity_pack_reply.sub_func = p_entity_pack_task->sub_func;
+            entity_pack_reply.pack_size = p_entity_pack_task->pack_size;
+            entity_pack_reply.argv = Dummy_00;
+            for (i = 0; i < p_entity_pack_task->pack_size; i++)
+            {
+                entity_pack_reply.entity_pack[i].entity_name = p_entity_pack_task->entity_pack[i].entity_name;
+                entity_pack_reply.entity_pack[i].entity_value = GetIO_ByEntityName(p_entity_pack_task->entity_pack[i].entity_name);
+            }
+            tmp1 = p_entity_pack_task->pack_size << 1;
+            tmp1 += 4;
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_pack_reply, tmp1);
+        }
+        else if (p_entity_pack_task->sub_func == SubFunc_pack_set)
+        {
+            entity_pack_reply.cmd_id_rep = RespPositive_EntityPack;
+            entity_pack_reply.sub_func = p_entity_pack_task->sub_func;
+            entity_pack_reply.pack_size = p_entity_pack_task->pack_size;
+            entity_pack_reply.argv = Dummy_00;
+            for (i = 0; i < p_entity_pack_task->pack_size; i++)
+            {
+                WriteValue_ByEntityName(p_entity_pack_task->entity_pack[i].entity_name,
+                                        p_entity_pack_task->entity_pack[i].entity_value);
+            }
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_pack_reply, 4);
+        }
+        break;
     default:
         res = PASS;
     }
@@ -257,11 +291,11 @@ void RTC_Control_Handler_Uninit()
         if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
         { 
             SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
-            // entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
-            // if (entity_val == 0)
-            //     IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
-            // else
-            //     IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 0);
+            entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
+            if (entity_val == 0)
+                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
+            else
+                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 0);
 
             //snprintf(log_msg, 60, "IO_PUNCHER_PISTON_UP_ENTITY:%d",(!entity_val));
             

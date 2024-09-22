@@ -27,6 +27,7 @@ void Refresh_EntityTableMask();
 char GetMask_ByEntityName(IO_Entity_Name_t entitynumber);
 char SetValue_ByEntityName(IO_Entity_Name_t entitynumber);
 char ClrValue_ByEntityName(IO_Entity_Name_t entitynumber);
+char WriteValue_ByEntityName(IO_Entity_Name_t entitynumber, unsigned char entity_value);
 
 void Set_GetEntityTableMode(enum EntityTable_SubFunc mode);
 char Get_GetEntityTableMode();

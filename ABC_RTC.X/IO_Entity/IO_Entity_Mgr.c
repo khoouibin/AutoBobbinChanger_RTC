@@ -712,12 +712,7 @@ char EntityTable_Compare()
            break;
        }
    }
-   asm("NOP");
-   asm("NOP");
-
    memcpy(gEntityTable_Backup, gEntityTable, sizeof(gEntityTable));
-   asm("NOP");
-   asm("NOP");
    return res;
 }
 

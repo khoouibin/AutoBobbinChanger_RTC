@@ -119,8 +119,8 @@ typedef struct
 {
 	unsigned char cmd_id;
 	unsigned char sub_func;
-	unsigned char ignore0;
-	unsigned char ignore1;
+	unsigned char argv_0;
+	unsigned char argv_1;
 	unsigned char data[MSG_DATA_SIZE];
 } USB_Task_msg_t;
 
@@ -128,8 +128,8 @@ typedef struct
 {
 	unsigned char cmd_id_rep;
 	unsigned char sub_func;
-	unsigned char ignore0;
-	unsigned char ignore1;
+	unsigned char argv_0;
+	unsigned char argv_1;
 	unsigned char data[MSG_DATA_SIZE];
 } USB_TaskResp_msg_t;
 
@@ -138,7 +138,7 @@ typedef struct
 	unsigned char resp_id;
 	unsigned char cmd_id;
 	unsigned char neg_code;
-	unsigned char ignore;
+	unsigned char neg_argv;
 	unsigned char data[MSG_DATA_SIZE];
 } USB_NegResponse_msg_t;
 
@@ -223,10 +223,10 @@ typedef struct
 
 typedef struct
 {
-	unsigned char cmd_id_rep;
+	unsigned char cmd_id;
 	unsigned char sub_func;
-	unsigned char reply_period;
 	unsigned char pack_size;
+	unsigned char argv;
 	ioentity_pack_t entity_pack[MSG_ENTITY_MAX_PACK_SIZE];
 } usb_msg_entity_pack_t;
 
@@ -234,8 +234,8 @@ typedef struct
 {
 	unsigned char cmd_id_rep;
 	unsigned char sub_func;
-	unsigned char reply_period;
 	unsigned char pack_size;
+	unsigned char argv;
 	ioentity_pack_t entity_pack[MSG_ENTITY_MAX_PACK_SIZE];
 } usb_msg_entity_pack_reply_t;
 
