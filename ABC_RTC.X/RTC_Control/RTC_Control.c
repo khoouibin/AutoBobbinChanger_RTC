@@ -55,9 +55,12 @@ RTC_Control_State_t RTC_Control_Main(void)
         else if (control_state == RTC_CONTROL_STATE_DIAGNOSIS)
             RTC_Control_Handler_Diagnosis();
 
+        // 1ms isr.
         if (BL_USB_Tx_1mISR_Get() == 1)
         {
             BL_USB_Tx_1mISR_Clr();
+            z_pulse_startup_by_tmr();
+
             // to send usb_data every 1ms if bus available.
             USB_TxBulkBuffer_To_Bus();
         }
@@ -115,6 +118,8 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
     usb_msg_entity_pack_t *p_entity_pack_task;
     usb_msg_entitytable_reply_t entity_tab_reply;
     usb_msg_entity_pack_reply_t entity_pack_reply;
+    usb_msg_z_pulse_gen_t *p_z_pulse_gen_task;
+    usb_msg_z_pulse_gen_reply_t z_pulse_gen_reply;
 
     unsigned long reset_delay_cnt;
     char resp_msg[48];
@@ -270,6 +275,31 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
             USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_pack_reply, 4);
         }
         break;
+
+    case Cmd_Z_PulseGen:
+        LATHbits.LATH15 = 1;
+        NOP20_MACRO();
+        LATHbits.LATH15 = 0;
+
+        p_z_pulse_gen_task = (usb_msg_z_pulse_gen_t *)task_msg;
+        if (p_z_pulse_gen_task->sub_func == SubFunc_z_pulse_gen_off)
+        {
+            z_pulse_off_by_usb_msg();
+        }
+        else if (p_z_pulse_gen_task->sub_func == SubFunc_z_pulse_gen_pwm)
+        {
+            z_pulse_update_by_usb_msg(p_z_pulse_gen_task->z_pwm_value.period_hiword,
+                                      p_z_pulse_gen_task->z_pwm_value.period_loword,
+                                      p_z_pulse_gen_task->z_pwm_value.dutyon_hiword,
+                                      p_z_pulse_gen_task->z_pwm_value.dutyon_loword);
+        }
+        z_pulse_gen_reply.cmd_id_rep = RespPositive_Z_PulseGen;
+        z_pulse_gen_reply.sub_func = p_z_pulse_gen_task->sub_func;
+        z_pulse_gen_reply.argv_0 = Dummy_00;
+        z_pulse_gen_reply.argv_1 = Dummy_00;
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&z_pulse_gen_reply, 4);
+        break;
+
     default:
         res = PASS;
     }
@@ -291,11 +321,11 @@ void RTC_Control_Handler_Uninit()
         if (SysTimer_IsTimerExpiered(RTC_CONTROL_WINK) == 1)
         { 
             SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_WINK, C_RTC_CONTROL_WINK_ms);
-            entity_val = IO_Entity_Mgr_Get_Entity(IO_PUNCHER_PISTON_UP_ENTITY);
+            entity_val = IO_Entity_Mgr_Get_Entity(IO_ZA2_PISTON_ENTITY);
             if (entity_val == 0)
-                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 1);
+                IO_Entity_Mgr_Set_Entity(IO_ZA2_PISTON_ENTITY, 1);
             else
-                IO_Entity_Mgr_Set_Entity(IO_PUNCHER_PISTON_UP_ENTITY, 0);
+                IO_Entity_Mgr_Set_Entity(IO_ZA2_PISTON_ENTITY, 0);
 
             //snprintf(log_msg, 60, "IO_PUNCHER_PISTON_UP_ENTITY:%d",(!entity_val));
             

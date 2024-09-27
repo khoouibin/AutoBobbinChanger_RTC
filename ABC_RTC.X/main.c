@@ -17,7 +17,7 @@
 #include "pps.h"
 #include "RTC_Control.h"
 #include "usb_app.h"
-
+#include "RTC_PulseControl.h"
 /** CONFIGURATION **************************************************/
 // 150729 add Macros for Configuration Fuse Registers as below
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -101,6 +101,14 @@ int uart2RX_flag = 0;
         asm("NOP");     \
     }
 
+/*
+    Interrupt list:
+    1. USB1Interrupt:
+    2. T9Interrupt: 1ms timer interrupt for rtc_control.
+    3. OC1Interrupt: (un-use)
+    4. OC1-OC2 with Tmr3 Interrupt: Z rpm pulse control.
+
+*/
 int main(void)
 {
     RTC_Control_State_t Is_Exit_RTC_Control = RTC_CONTROL_STATE_UNDEFINE;
@@ -151,7 +159,7 @@ static void Initialize_System( void )
     REFOCONbits.ROON = 1;   // Reference oscillator output is enabled on REFCLK pin
  
 	IO_Init_Ports();			//151022 Adam added	
-	//IO_Init_PPS();				//151022 Adam added
+	IO_Init_PPS();				//151022 Adam added
 }//end InitializeSystem
 
 static void Initialize_Communication_Modules( void )

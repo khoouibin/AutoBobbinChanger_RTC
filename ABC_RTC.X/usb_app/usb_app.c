@@ -393,6 +393,18 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
         if (p_entity_pack_task->pack_size <= MSG_ENTITY_MAX_PACK_SIZE)
             res_code = POSITIVE_CODE;
         break;
+
+    case Cmd_Z_PulseGen:
+        res_code = NRC_SUBFUNC_OUTRANGE;
+        for (i = 0; i < SubFunc_z_pulse_gen_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
+        break;
     }
     return res_code;
 }

@@ -37,7 +37,6 @@ void Init_Timers(void)
     IPC1bits.T2IP = 4;
     IEC0bits.T2IE = 0;
     IPC2bits.T3IP = 4;
-    IEC0bits.T3IE = 0;
     IPC7bits.T5IP = 3;
     IEC1bits.T5IE = 1;
     IPC11bits.T6IP = 3;

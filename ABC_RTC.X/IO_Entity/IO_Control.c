@@ -49,7 +49,7 @@ void IO_Init_Ports(void)
 void IO_Init_PPS(void)
 {
 	PPSUnLock;
-	iPPSOutput(OUT_PIN_PPS_RP84, OUT_FN_PPS_OC1); // Step Z 	// RE4/RP84  		//PIn 144
+	iPPSOutput(OUT_PIN_PPS_RP84, OUT_FN_PPS_OC2); // Step Z 	// RE4/RP84  		//PIn 144
 	iPPSInput(IN_FN_PPS_T6CK, IN_PIN_PPS_RPI32);  // Step Counter     // On New RTC uses the RB0/RPI32
 	iPPSInput(IN_FN_PPS_QEI1, IN_PIN_PPS_RPI72);  // Index    // RD8/RPI72        //Pin 97
 	iPPSInput(IN_FN_PPS_QEA1, IN_PIN_PPS_RPI77);  // Ch A     // RD13/RPI77      // Pin 114
