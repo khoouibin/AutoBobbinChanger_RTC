@@ -6,7 +6,7 @@ ALPHA = 2*3.14159/Z_pulse_per_round
 A_T_x100 =ALPHA*Fcy*100
 T1_FREQ_148 = (Fcy*0.676)/100
 A_SQ =ALPHA*2*10000000000
-
+A_x20000 =(ALPHA*20000) 
 import math
 
 def main():
@@ -48,12 +48,21 @@ def main():
     # print('};')
 
     #---------------------avr446
+    steps = 5000
     speeds = 2000 #200rpm
-    accel = 4000 
+    accel = 8000 
+    decel = 8000 
     min_delay = A_T_x100 / speeds
     print("min_delay(200rpm) actual(191rpm):",int(min_delay))
 
     step_delay = T1_FREQ_148 * math.sqrt(A_SQ/accel)/100
     print("step_delay(200rpm):",int(step_delay))
+
+    #max_s_lim = (long)speeds*speeds/(long)(((long)A_x20000*accel)/100);/
+    max_s_lim = speeds*speeds/(A_x20000*accel/100)
+    print("max_s_lim(steps):",int(max_s_lim))
+
+    accel_lim = steps*decel/(accel+decel)#((long)steps*decel) / (accel+decel);
+    print("accel_lim(steps):",int(accel_lim))
 if __name__ == '__main__':
     main()
