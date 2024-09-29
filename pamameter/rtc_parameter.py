@@ -5,14 +5,15 @@ Z_pulse_per_round = 1600
 ALPHA = 2*3.14159/Z_pulse_per_round
 A_T_x100 =ALPHA*Fcy*100
 T1_FREQ_148 = (Fcy*0.676)/100
-A_SQ =ALPHA*2*10000000000
-A_x20000 =(ALPHA*20000) 
+A_SQ =ALPHA*2*1e10
+A_x20000 =(ALPHA*20000)
+rpm_to_rad = 1/9.55
 import math
 
 def main():
 
     # Z rpm table generator
-    z_rpm_list = list(range(1,10,1))
+    z_rpm_list = list(range(5,200,4))
     z_rpm_pulse_prescale_1 = []
     z_rpm_dict = {}
     for z_rpm in z_rpm_list:
@@ -48,21 +49,73 @@ def main():
     # print('};')
 
     #---------------------avr446
-    steps = 5000
-    speeds = 2000 #200rpm
-    accel = 8000 
-    decel = 8000 
-    min_delay = A_T_x100 / speeds
-    print("min_delay(200rpm) actual(191rpm):",int(min_delay))
+    # steps = 5000
+    # speeds = 2000 #200rpm
+    # accel = 8000 
+    # decel = 8000 
+    # min_delay = A_T_x100 / speeds
+    # print("min_delay(200rpm) actual(191rpm):",int(min_delay))
 
+    # step_delay = T1_FREQ_148 * math.sqrt(A_SQ/accel)/100
+    # print("step_delay(200rpm):",int(step_delay))
+
+    # #max_s_lim = (long)speeds*speeds/(long)(((long)A_x20000*accel)/100);/
+    # max_s_lim = speeds*speeds/(A_x20000*accel/100)
+    # print("max_s_lim(steps):",int(max_s_lim))
+
+    # accel_lim = steps*decel/(accel+decel)#((long)steps*decel) / (accel+decel);
+    # print("accel_lim(steps):",int(accel_lim))
+
+    start_speed = 4
+    max_speed = 200 # assume max spd = 200rpm
+    max_spd_rad_per_sec = max_speed * rpm_to_rad
+    min_delay = A_T_x100 /max_spd_rad_per_sec / 100
+    print('min_delay (src:%drpm)=%d count'%(max_speed,min_delay))
+
+    accel_rpm = max_speed * 3
+    accel = accel_rpm * rpm_to_rad
     step_delay = T1_FREQ_148 * math.sqrt(A_SQ/accel)/100
-    print("step_delay(200rpm):",int(step_delay))
+    print('step_delay (accel:%drpm)=%d count'%(accel_rpm,step_delay))
 
-    #max_s_lim = (long)speeds*speeds/(long)(((long)A_x20000*accel)/100);/
-    max_s_lim = speeds*speeds/(A_x20000*accel/100)
-    print("max_s_lim(steps):",int(max_s_lim))
+    v=(max_speed* rpm_to_rad)
+    u=(start_speed* rpm_to_rad)
+    acc = (v*v-u*u)/(2*ALPHA)
+    print('acc =%d '%(acc))
 
-    accel_lim = steps*decel/(accel+decel)#((long)steps*decel) / (accel+decel);
-    print("accel_lim(steps):",int(accel_lim))
+    #c_0=z_rpm_dict['5rpm'][2]
+    maxspd=200
+    print('---maxspd:',maxspd)
+    if maxspd >=14:
+        z_rpm = maxspd/14
+    else:
+        z_rpm = maxspd
+    if z_rpm < 5:
+        z_rpm = 5
+    z_pulse_t = 60/z_rpm/Z_pulse_per_round
+    z_pulse_period = Fcy*z_pulse_t
+    c_0 = z_pulse_period
+    cn_dict={'c0':[c_0,c_0,'{:4.1f}us'.format((c_0/Fcy)*1e6),str(60/(c_0/Fcy)/Z_pulse_per_round)+'rpm']}
+    #print(cn_dict)
+    for i in range(1,500):
+        cn_va1 = int(cn_dict['c0'][0]*(math.sqrt(i+1)-math.sqrt(i)))
+        cn_va2 = (cn_dict['c%d'%(i-1)][1]-((2* cn_dict['c%d'%(i-1)][1])/(4*i+1)))
+        if i == 1:
+            cn_va2 /= 1.46
+        cn_dict['c%d'%(i)] = [cn_va1,int(cn_va2),'{:4.1f}us'.format((cn_va1/Fcy)*1e6),
+        '{:4.1f}prm'.format((60/(cn_va1/Fcy)/Z_pulse_per_round)),
+        '{:4.1f}prm2'.format((60/(cn_va2/Fcy)/Z_pulse_per_round)),
+        ]
+
+        if (60/(cn_va2/Fcy)/Z_pulse_per_round) >= maxspd:
+            break
+    
+    for idx, k in enumerate(cn_dict):
+        print(idx,k,cn_dict[k])
+
+    #    z_pulse_t = 60/z_rpm/Z_pulse_per_round
+    #     z_pulse_period = Fcy*z_pulse_t 
+
+
+
 if __name__ == '__main__':
     main()
