@@ -1,6 +1,6 @@
 #ifndef _RTC_PulseControl_H_
 #define _RTC_PulseControl_H_
-
+#include "Ons_General.h"
 #define NOP20_MACRO() \
     {                 \
         asm("NOP");   \
@@ -235,8 +235,9 @@ typedef struct
 
 typedef union
 {
-	unsigned long u32;
-	unsigned int  u16[2];
+	UINT_32 u32;
+	UINT_16 u16[2];
+    UCHAR_8 u8[4];
 }
 OCx_pulse_count_type_t;
 
@@ -244,13 +245,22 @@ typedef struct
 {
     OCx_pulse_count_type_t period;
     OCx_pulse_count_type_t dutyon;
-} x_pulse_width_modulation_t;
+} OCx_pulse_width_t;
+
+typedef struct
+{
+    OCx_pulse_width_t c_0;
+    OCx_pulse_width_t c_1;
+    OCx_pulse_width_t c_last;
+} OCx_pulse_width_cal_input_t;
 
 void z_pulse_gen_lookup_table(enum Zrpm rpm_value);
 char z_pulse_off_by_usb_msg();
 char z_pulse_update_by_usb_msg(int w, int x, int y, int z);
 char z_pulse_startup_by_tmr();
 
-void x_pulse_settings(x_pulse_width_modulation_t x_pwm);
+void x_pulse_settings(OCx_pulse_width_t x_pwm);
+//char OCx_CountDelay_Calculation(OCx_pulse_width_cal_input_t argvs, OCx_pulse_width_t *Cn[]);
+char OCx_CountDelay_Calculation(OCx_pulse_width_t *cn_ref, OCx_pulse_width_t *cn_seqence);
 
 #endif

@@ -1,8 +1,8 @@
 import sys
 
 Fcy = 60e6 #osc:60Mhz
-Z_pulse_per_round = 1600
-ALPHA = 2*3.14159/Z_pulse_per_round
+z_spr = 1600
+ALPHA = 2*3.14159/z_spr
 A_T_x100 =ALPHA*Fcy*100
 T1_FREQ_148 = (Fcy*0.676)/100
 A_SQ =ALPHA*2*1e10
@@ -13,17 +13,18 @@ import math
 def main():
 
     # Z rpm table generator
-    z_rpm_list = list(range(5,200,4))
+    z_rpm_list = list(range(5,25,5))
+    print('z_rpm_list:',z_rpm_list)
     z_rpm_pulse_prescale_1 = []
     z_rpm_dict = {}
     for z_rpm in z_rpm_list:
-        z_pulse_t = 60/z_rpm/Z_pulse_per_round
+        z_pulse_t = 60/z_rpm/z_spr
         z_pulse_period = Fcy*z_pulse_t
         z_rpm_pulse_prescale_1.append(z_pulse_period) 
         z_rpm_dict[str(z_rpm)+'rpm'] = [z_rpm,'{:4.1f}us'.format(z_pulse_t*1e6),int(z_pulse_period)]
 
     for idx, _z in enumerate(z_rpm_dict):
-        print(idx,_z,z_rpm_dict[_z])
+        print('000',idx,_z,z_rpm_dict[_z])
     
     # print('enum Zrpm {')
     # for idx, _z in enumerate(z_rpm_dict):
@@ -83,7 +84,7 @@ def main():
     print('acc =%d '%(acc))
 
     #c_0=z_rpm_dict['5rpm'][2]
-    maxspd=200
+    maxspd=20
     print('---maxspd:',maxspd)
     if maxspd >=14:
         z_rpm = maxspd/14
@@ -91,10 +92,15 @@ def main():
         z_rpm = maxspd
     if z_rpm < 5:
         z_rpm = 5
-    z_pulse_t = 60/z_rpm/Z_pulse_per_round
+    # if z_rpm < 12.2:
+    #     z_rpm = 12.2
+    z_pulse_t = 60/z_rpm/z_spr
     z_pulse_period = Fcy*z_pulse_t
+
+    z_max_spd_period = 60/maxspd/z_spr*Fcy
+    print('z_max_spd_period:',z_max_spd_period)
     c_0 = z_pulse_period
-    cn_dict={'c0':[c_0,c_0,'{:4.1f}us'.format((c_0/Fcy)*1e6),str(60/(c_0/Fcy)/Z_pulse_per_round)+'rpm']}
+    cn_dict={'c0':[c_0,c_0,'{:4.1f}us'.format((c_0/Fcy)*1e6),str(60/(c_0/Fcy)/z_spr)+'rpm']}
     #print(cn_dict)
     for i in range(1,500):
         cn_va1 = int(cn_dict['c0'][0]*(math.sqrt(i+1)-math.sqrt(i)))
@@ -102,17 +108,18 @@ def main():
         if i == 1:
             cn_va2 /= 1.46
         cn_dict['c%d'%(i)] = [cn_va1,int(cn_va2),'{:4.1f}us'.format((cn_va1/Fcy)*1e6),
-        '{:4.1f}prm'.format((60/(cn_va1/Fcy)/Z_pulse_per_round)),
-        '{:4.1f}prm2'.format((60/(cn_va2/Fcy)/Z_pulse_per_round)),
+        '{:4.1f}prm'.format((60/(cn_va1/Fcy)/z_spr)),
+        '{:4.1f}prm2'.format((60/(cn_va2/Fcy)/z_spr)),
         ]
+        print('cn_va2---:',cn_va2)
 
-        if (60/(cn_va2/Fcy)/Z_pulse_per_round) >= maxspd:
-            break
+        if (cn_va2) < z_max_spd_period:
+           break
     
     for idx, k in enumerate(cn_dict):
         print(idx,k,cn_dict[k])
 
-    #    z_pulse_t = 60/z_rpm/Z_pulse_per_round
+    #    z_pulse_t = 60/z_rpm/z_spr
     #     z_pulse_period = Fcy*z_pulse_t 
 
 

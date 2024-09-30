@@ -280,33 +280,58 @@ char z_pulse_startup_by_tmr()
     return 0;
 }
 
-void OC4_SyncTmr4_Settings(x_pulse_width_modulation_t x_pwm);
-void OC3_OC4_Cascade_Settings(x_pulse_width_modulation_t x_pwm);
+void OC4_SyncTmr4_Settings(OCx_pulse_width_t x_oc_value);
+void OC3_OC4_Cascade_Settings(OCx_pulse_width_t x_oc_value);
 
-void x_pulse_settings(x_pulse_width_modulation_t x_pwm)
+void x_pulse_settings(OCx_pulse_width_t x_oc_value)
 {
-    if (x_pwm.period.u16[1] > 0)
-        OC3_OC4_Cascade_Settings(x_pwm);
+    if (x_oc_value.period.u16[1] > 0)
+        OC3_OC4_Cascade_Settings(x_oc_value);
     else
-        OC4_SyncTmr4_Settings(x_pwm);
+        OC4_SyncTmr4_Settings(x_oc_value);
 }
 
-void OC4_SyncTmr4_Settings(x_pulse_width_modulation_t x_pwm)
+void OC4_SyncTmr4_Settings(OCx_pulse_width_t x_oc_value)
 {
     int y, z;
-    y = x_pwm.dutyon.u16[0];
-    z = x_pwm.period.u16[0];
+    y = x_oc_value.dutyon.u16[0];
+    z = x_oc_value.period.u16[0];
     X_PULSE_OC4_SYNC_TMR4_MACRO(y, z);
 }
 
-void OC3_OC4_Cascade_Settings(x_pulse_width_modulation_t x_pwm)
+void OC3_OC4_Cascade_Settings(OCx_pulse_width_t x_oc_value)
 {
     int w, x, y, z;
-    w = x_pwm.period.u16[1];
-    x = x_pwm.period.u16[0];
-    y = x_pwm.dutyon.u16[1];
-    z = x_pwm.dutyon.u16[0];
+    w = x_oc_value.period.u16[1];
+    x = x_oc_value.period.u16[0];
+    y = x_oc_value.dutyon.u16[1];
+    z = x_oc_value.dutyon.u16[0];
     X_PULSE_OC3_OC4_CASCADE_MACRO(w, x, y, z);
+}
+
+char OCx_CountDelay_Calculation(OCx_pulse_width_t *cn_ref, OCx_pulse_width_t *cn_sequence)
+{   //5 rpm    = 450000, {0x0006,0xddd0,0x0003,0x6ee8}
+    //12.2 rpm = 184426, {0x0002,0xd06a,0x0001,0x6835}
+    //20 rpm = 112500
+    // unsigned char n;
+    // unsigned long u32_maxspd_period_cnt = argvs.c_last.period.u32;
+    //OCx_pulse_width_t* p_ocx_pw =(OCx_pulse_width_t *)argvs.c_0.period;
+//    Cn[0]->period.u32=1;
+//    Cn[1]->period.u32=123456;
+//    memcpy(Cn[0], p_ocx_pw, sizeof(OCx_pulse_width_t.period));
+//    *Cn[0].dutyon.u16=argvs.c_0.period.u16>>1;
+//    *Cn[1].period.u16=argvs.c_1.period.u16;
+//    *Cn[1].dutyon.u16=argvs.c_1.period.u16>>1;
+//
+//    for (n=2;i<128;i++)
+//    {
+//
+//    }
+    OCx_pulse_width_t* p_cn_sequence = cn_sequence;
+    p_cn_sequence->period.u32 = cn_ref->period.u32;
+    
+
+    return 0;
 }
 
 void __attribute__((interrupt, no_auto_psv)) _OC4Interrupt(void)
