@@ -309,7 +309,7 @@ void OC3_OC4_Cascade_Settings(OCx_pulse_width_t x_oc_value)
     X_PULSE_OC3_OC4_CASCADE_MACRO(w, x, y, z);
 }
 
-char OCx_CountDelay_Calculation(OCx_pulse_width_t *cn_ref, OCx_pulse_width_t *cn_sequence)
+char OCx_CountDelay_Calculation(OCx_pulse_width_cal_input_t *cn_ref, OCx_pulse_width_t *cn_sequence)
 {   //5 rpm    = 450000, {0x0006,0xddd0,0x0003,0x6ee8}
     //12.2 rpm = 184426, {0x0002,0xd06a,0x0001,0x6835}
     //20 rpm = 112500
@@ -328,7 +328,7 @@ char OCx_CountDelay_Calculation(OCx_pulse_width_t *cn_ref, OCx_pulse_width_t *cn
 //
 //    }
     OCx_pulse_width_t* p_cn_sequence = cn_sequence;
-    p_cn_sequence->period.u32 = cn_ref->period.u32;
+    p_cn_sequence->period.u32 = cn_ref->c_0.period.u32;
     
 
     return 0;

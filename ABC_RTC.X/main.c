@@ -118,7 +118,7 @@ int main(void)
     x1.c_last.period.u32 = 123;
     
 
-    OCx_CountDelay_Calculation(&x1, &cn);
+    OCx_CountDelay_Calculation(&x1, cn);
  asm("NOP"); 
  asm("NOP"); 
  asm("NOP"); 

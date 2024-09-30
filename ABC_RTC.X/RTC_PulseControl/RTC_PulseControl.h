@@ -261,6 +261,6 @@ char z_pulse_startup_by_tmr();
 
 void x_pulse_settings(OCx_pulse_width_t x_pwm);
 //char OCx_CountDelay_Calculation(OCx_pulse_width_cal_input_t argvs, OCx_pulse_width_t *Cn[]);
-char OCx_CountDelay_Calculation(OCx_pulse_width_t *cn_ref, OCx_pulse_width_t *cn_seqence);
+char OCx_CountDelay_Calculation(OCx_pulse_width_cal_input_t* cn_ref, OCx_pulse_width_t *cn_seqence);
 
 #endif
