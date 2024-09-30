@@ -32,21 +32,21 @@ def main():
     # print('     z_rpm_max,')
     # print('};')
 
-    # print('OC_1_2_CascadeDef_t OC_1_2_cascade_def[] FAR={')
-    # for idx, _z in enumerate(z_rpm_dict):
-    #     t_period = z_rpm_dict[_z][2]
-    #     t_dutyon = int(t_period/2)
-    #     a0_period = t_period & 0xffff
-    #     a1_period = (t_period >> 16) & 0xffff
-    #     a0_dutyon = t_dutyon & 0xffff
-    #     a1_dutyon = (t_dutyon >> 16) & 0xffff
-    #     log = '{%d,{0x%s,0x%s,0x%s,0x%s}},'%(z_rpm_dict[_z][0],
-    #                                        '{:04x}'.format(a1_period),
-    #                                        '{:04x}'.format(a0_period),
-    #                                        '{:04x}'.format(a1_dutyon),
-    #                                        '{:04x}'.format(a0_dutyon))
-    #     print(log)
-    # print('};')
+    print('OC_1_2_CascadeDef_t OC_1_2_cascade_def[] FAR={')
+    for idx, _z in enumerate(z_rpm_dict):
+        t_period = z_rpm_dict[_z][2]
+        t_dutyon = int(t_period/2)
+        a0_period = t_period & 0xffff
+        a1_period = (t_period >> 16) & 0xffff
+        a0_dutyon = t_dutyon & 0xffff
+        a1_dutyon = (t_dutyon >> 16) & 0xffff
+        log = '{%d,{0x%s,0x%s,0x%s,0x%s}},'%(z_rpm_dict[_z][0],
+                                           '{:04x}'.format(a1_period),
+                                           '{:04x}'.format(a0_period),
+                                           '{:04x}'.format(a1_dutyon),
+                                           '{:04x}'.format(a0_dutyon))
+        print(log)
+    print('};')
 
     #---------------------avr446
     # steps = 5000

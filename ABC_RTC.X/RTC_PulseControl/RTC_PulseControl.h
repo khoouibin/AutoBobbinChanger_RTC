@@ -111,6 +111,60 @@
         IEC0bits.T3IE = 0;                        \
     }
 
+#define X_PULSE_OC4_SYNC_TMR4_MACRO(Y, Z) \
+    {                                     \
+        OC3CON1 = 0;                      \
+        OC3CON2 = 0;                      \
+        OC4CON1 = 0;                      \
+        OC4CON2 = 0;                      \
+        T4CON = 0;                        \
+        TMR4 = 0;                         \
+        OC4CON1bits.OCTSEL = 0x07;        \
+        OC4CON2bits.SYNCSEL = 0b1110;     \
+        OC4CON2bits.OCTRIS = 0;           \
+        OC4CON2bits.OC32 = 0;             \
+        OC3CON2bits.OC32 = 0;             \
+        OC4R = Y;                         \
+        OC4RS = Z;                        \
+        PR4 = Z;                          \
+        OC4CON1bits.OCM = 7;              \
+        IPC6bits.OC4IP = 0x06;            \
+        IFS1bits.OC4IF = 0;               \
+        IEC1bits.OC4IE = 0;               \
+        IEC1bits.OC3IE = 0;               \
+        IEC1bits.T4IE = 1;                \
+        T4CON = 0x8000;                   \
+    }
+
+#define X_PULSE_OC3_OC4_CASCADE_MACRO(W, X, Y, Z) \
+    {                                             \
+        OC3CON1 = 0;                              \
+        OC3CON2 = 0;                              \
+        OC4CON1 = 0;                              \
+        OC4CON2 = 0;                              \
+        T4CON = 0;                                \
+        TMR4 = 0;                                 \
+        OC4CON1bits.OCTSEL = 0x07;                \
+        OC3CON1bits.OCTSEL = 0x07;                \
+        OC4RS = W;                                \
+        OC3RS = X;                                \
+        OC4R = Y;                                 \
+        OC3R = Z;                                 \
+        OC4CON2bits.SYNCSEL = 0x1f;               \
+        OC3CON2bits.SYNCSEL = 0x1f;               \
+        OC4CON2bits.OCTRIS = 0;                   \
+        OC3CON2bits.OCTRIS = 1;                   \
+        OC4CON2bits.OC32 = 1;                     \
+        OC3CON2bits.OC32 = 1;                     \
+        OC4CON1bits.OCM = 7;                      \
+        OC3CON1bits.OCM = 7;                      \
+        IPC6bits.OC4IP = 0x06;                    \
+        IFS1bits.OC4IF = 0;                       \
+        IEC1bits.OC4IE = 1;                       \
+        IEC1bits.OC3IE = 0;                       \
+        IEC1bits.T4IE = 0;                        \
+    }
+
 enum Zrpm
 {
     z_100rpm = 0,
@@ -179,8 +233,24 @@ typedef struct
     z_pulse_width_modulation_t z_pulse_cnts;
 } OC_1_2_CascadeDef_t;
 
+typedef union
+{
+	unsigned long u32;
+	unsigned int  u16[2];
+}
+OCx_pulse_count_type_t;
+
+typedef struct
+{
+    OCx_pulse_count_type_t period;
+    OCx_pulse_count_type_t dutyon;
+} x_pulse_width_modulation_t;
+
 void z_pulse_gen_lookup_table(enum Zrpm rpm_value);
 char z_pulse_off_by_usb_msg();
 char z_pulse_update_by_usb_msg(int w, int x, int y, int z);
 char z_pulse_startup_by_tmr();
+
+void x_pulse_settings(x_pulse_width_modulation_t x_pwm);
+
 #endif
