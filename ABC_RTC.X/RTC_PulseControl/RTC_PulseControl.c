@@ -327,8 +327,14 @@ char OCx_CountDelay_Calculation(OCx_pulse_width_cal_input_t *cn_ref, OCx_pulse_w
 //    {
 //
 //    }
-    OCx_pulse_width_t* p_cn_sequence = cn_sequence;
-    p_cn_sequence->period.u32 = cn_ref->c_0.period.u32;
+    // OCx_pulse_width_t* p_cn_sequence = cn_sequence;
+    // p_cn_sequence->period.u32 = cn_ref->c_0.period.u32;
+    OCx_pulse_width_t* p_cn_seq=cn_sequence;
+    p_cn_seq->period.u32=cn_ref->c_0.period.u32;
+    p_cn_seq->dutyon.u32=cn_ref->c_0.period.u32>>1;
+    p_cn_seq+=1;
+    p_cn_seq->period.u32=cn_ref->c_1.period.u32;
+    p_cn_seq->dutyon.u32=cn_ref->c_1.period.u32>>1;
     
 
     return 0;
