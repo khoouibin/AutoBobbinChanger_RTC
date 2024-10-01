@@ -60,6 +60,7 @@ RTC_Control_State_t RTC_Control_Main(void)
         {
             BL_USB_Tx_1mISR_Clr();
             z_pulse_startup_by_tmr();
+            x_pulse_startup_by_tmr();
 
             // to send usb_data every 1ms if bus available.
             USB_TxBulkBuffer_To_Bus();
@@ -120,6 +121,8 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
     usb_msg_entity_pack_reply_t entity_pack_reply;
     usb_msg_z_pulse_gen_t *p_z_pulse_gen_task;
     usb_msg_z_pulse_gen_reply_t z_pulse_gen_reply;
+    usb_msg_x_pulse_gen_t *p_x_pulse_gen_task;
+    usb_msg_x_pulse_gen_reply_t x_pulse_gen_reply;
 
     unsigned long reset_delay_cnt;
     char resp_msg[48];
@@ -277,9 +280,10 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
         break;
 
     case Cmd_Z_PulseGen:
-        LATHbits.LATH15 = 1;
-        NOP20_MACRO();
-        LATHbits.LATH15 = 0;
+        // debug, confirm the timing of 'received msg to pulse generate changes'
+        // LATHbits.LATH15 = 1;
+        // NOP20_MACRO();
+        // LATHbits.LATH15 = 0;
 
         p_z_pulse_gen_task = (usb_msg_z_pulse_gen_t *)task_msg;
         if (p_z_pulse_gen_task->sub_func == SubFunc_z_pulse_gen_off)
@@ -298,6 +302,28 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
         z_pulse_gen_reply.argv_0 = Dummy_00;
         z_pulse_gen_reply.argv_1 = Dummy_00;
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&z_pulse_gen_reply, 4);
+        break;
+
+    case Cmd_X_PulseGen:
+        // LATHbits.LATH15 = 1;
+        // NOP20_MACRO();
+        // LATHbits.LATH15 = 0;
+
+        p_x_pulse_gen_task = (usb_msg_x_pulse_gen_t *)task_msg;
+        if (p_x_pulse_gen_task->sub_func == SubFunc_x_pulsemode_run_stop)
+        {
+            Nop();
+        }
+        else if (p_x_pulse_gen_task->sub_func == SubFunc_x_pulsemode_trapezoid)
+        {
+            OCx_src_t* p_ocx_scr=(OCx_src_t*)&p_x_pulse_gen_task->x_sequence;
+            x_pulse_update_by_usb_msg(p_ocx_scr,p_x_pulse_gen_task->steps);
+        }
+        x_pulse_gen_reply.cmd_id_rep = RespPositive_X_PulseGen;
+        x_pulse_gen_reply.sub_func = p_x_pulse_gen_task->sub_func;
+        x_pulse_gen_reply.argv_0 = Dummy_00;
+        x_pulse_gen_reply.argv_1 = Dummy_00;
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&x_pulse_gen_reply, 4);
         break;
 
     default:

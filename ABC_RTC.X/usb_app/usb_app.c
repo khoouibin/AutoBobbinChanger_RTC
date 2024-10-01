@@ -405,6 +405,18 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
             }
         }
         break;
+
+    case Cmd_X_PulseGen:
+        res_code = NRC_SUBFUNC_OUTRANGE;
+        for (i = 0; i < SubFunc_x_pulsemode_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
+        break;
     }
     return res_code;
 }

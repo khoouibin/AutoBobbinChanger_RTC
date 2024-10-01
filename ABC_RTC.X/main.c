@@ -111,42 +111,16 @@ int uart2RX_flag = 0;
 */
 int main(void)
 {
-    OCx_pulse_width_cal_input_t x1;
-    OCx_pulse_width_t cn[64];
-    x1.c_0.period.u32=450000;
-    x1.c_1.period.u32=184426;
-    x1.c_last.period.u32 = 123;
-    
-
-    OCx_CountDelay_Calculation(&x1, cn);
- asm("NOP"); 
- asm("NOP"); 
- asm("NOP"); 
- asm("NOP"); 
     RTC_Control_State_t Is_Exit_RTC_Control = RTC_CONTROL_STATE_UNDEFINE;
-//    Initialize_System();
-//    Initialize_Communication_Modules();
+    Initialize_System();
+    Initialize_Communication_Modules();
 
-    OCx_pulse_width_t x_cnt;
-    x_cnt.period.u16[1] = 0x0006;
-    x_cnt.period.u16[0] = 0xddd0;
-    x_cnt.dutyon.u16[1] = 0x0003;
-    x_cnt.dutyon.u16[0] = 0x6ee8;
-    x_pulse_settings(x_cnt);
-
-// typedef struct
-// {
-//     OCx_pulse_width_t c_0;
-//     OCx_pulse_width_t c_1;
-//     OCx_pulse_width_t c_last;
-//     unsigned short steps;
-// } OCx_pulse_width_cal_input_t;
-
-
-
-asm("NOP"); 
-asm("NOP"); 
-asm("NOP"); 
+    // OCx_sequence_t x_cnt;
+    // x_cnt.period.u16[1] = 0x0006;
+    // x_cnt.period.u16[0] = 0xddd0;
+    // x_cnt.dutyon.u16[1] = 0x0003;
+    // x_cnt.dutyon.u16[0] = 0x6ee8;
+    // x_pulse_settings(x_cnt);
 
     Is_Exit_RTC_Control = RTC_Control_Main();
     if (Is_Exit_RTC_Control == RTC_CONTROL_RESET)

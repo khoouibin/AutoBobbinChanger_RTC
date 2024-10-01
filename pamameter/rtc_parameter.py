@@ -104,7 +104,7 @@ def main():
     #print(cn_dict)
     for i in range(1,500):
         cn_va1 = int(cn_dict['c0'][0]*(math.sqrt(i+1)-math.sqrt(i)))
-        cn_va2 = (cn_dict['c%d'%(i-1)][1]-((2* cn_dict['c%d'%(i-1)][1])/(4*i+1)))
+        cn_va2 = (cn_dict['c%d'%(i-1)][1]-int((2* cn_dict['c%d'%(i-1)][1])/(4*i+1)))
         if i == 1:
             cn_va2 /= 1.46
         cn_dict['c%d'%(i)] = [cn_va1,int(cn_va2),'{:4.1f}us'.format((cn_va1/Fcy)*1e6),

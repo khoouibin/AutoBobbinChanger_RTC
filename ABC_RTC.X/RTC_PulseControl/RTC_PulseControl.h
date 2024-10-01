@@ -245,22 +245,70 @@ typedef struct
 {
     OCx_pulse_count_type_t period;
     OCx_pulse_count_type_t dutyon;
-} OCx_pulse_width_t;
+} OCx_sequence_t;
 
 typedef struct
 {
-    OCx_pulse_width_t c_0;
-    OCx_pulse_width_t c_1;
-    OCx_pulse_width_t c_last;
-} OCx_pulse_width_cal_input_t;
+    OCx_sequence_t cx[2];
+    OCx_sequence_t cx_last;
+} OCx_src_t;
+
+typedef struct
+{
+    char x_pulse_gen_enable;
+    char x_pulse_update_mutex;
+    char x_pulse_update_turn_off;
+    unsigned short x_steps;
+    int x_cx_seq_valid;
+    OCx_sequence_t cx_seq[64];
+} X_Pulse_msg_update_t;
+
+typedef enum
+{
+    JmpAccel,
+    JmpFixed,
+    JmpDeaccel,
+} Jump_State_t;
+
+typedef struct
+{
+    unsigned short total_steps;
+    unsigned short accel_steps;
+    unsigned short deaccel_steps;
+    unsigned short fixed_steps;
+    Jump_State_t state;
+    unsigned short steps_counter;
+} X_Pulse_Jump_Para_t;
+
+// typedef   struct 
+// {
+// 	unsigned short int  Distance;				// total steps
+// 	unsigned short int  Acc_Steps;				// steps to acc 
+// 	unsigned short int	Fixed_Steps;			// steps with constant speed
+// 	unsigned short int  Deacc_Steps;			// steps to deacc ( =acc/acc-1)
+// 	unsigned short int	ds_div_acc_l ;			// factor step/acc* 10^10
+// 	unsigned short int	ds_div_acc_h ;			// shifts of low part
+
+// } Jump_Param_t ;
+
+
+
+// typedef  struct
+// {
+// 		Jump_State_t		State ;					// acc, fixed, deacc
+// 		unsigned short int	Steps_in_State ;		// steps done at acc/fix/deacc phases
+// 		unsigned short int	Acc_Time ;				// accumulated time in acc and deacc(rev) 
+// 		unsigned short int	Dt ;					// last dt 
+
+// }  Jump_Status_t ;
 
 void z_pulse_gen_lookup_table(enum Zrpm rpm_value);
 char z_pulse_off_by_usb_msg();
 char z_pulse_update_by_usb_msg(int w, int x, int y, int z);
 char z_pulse_startup_by_tmr();
 
-void x_pulse_settings(OCx_pulse_width_t x_pwm);
-//char OCx_CountDelay_Calculation(OCx_pulse_width_cal_input_t argvs, OCx_pulse_width_t *Cn[]);
-char OCx_CountDelay_Calculation(OCx_pulse_width_cal_input_t* cn_ref, OCx_pulse_width_t *cn_seqence);
-
+void x_pulse_settings(OCx_sequence_t x_pwm);
+char OCx_CountDelay_Calculation(OCx_src_t *cn_ref, OCx_sequence_t *cn_seqence, int cn_seq_size, int *cn_seq_idx);
+char x_pulse_update_by_usb_msg(OCx_src_t* osx_src, unsigned short steps);
+char x_pulse_startup_by_tmr();
 #endif
