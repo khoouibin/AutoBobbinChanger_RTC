@@ -165,6 +165,15 @@
         IEC1bits.T4IE = 0;                        \
     }
 
+#define X_PULSE_OFF_MACRO() \
+    {                       \
+        OC3CON1 = 0;        \
+        OC3CON2 = 0;        \
+        OC4CON1 = 0;        \
+        OC4CON2 = 0;        \
+        T4CON = 0;          \
+    }
+
 enum Zrpm
 {
     z_100rpm = 0,
@@ -268,6 +277,7 @@ typedef enum
     JmpAccel,
     JmpFixed,
     JmpDeaccel,
+    JmpTerminate,
 } Jump_State_t;
 
 typedef struct

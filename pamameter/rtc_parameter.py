@@ -102,6 +102,7 @@ def main():
     c_0 = z_pulse_period
     cn_dict={'c0':[c_0,c_0,'{:4.1f}us'.format((c_0/Fcy)*1e6),str(60/(c_0/Fcy)/z_spr)+'rpm']}
     #print(cn_dict)
+    n = 1
     for i in range(1,500):
         cn_va1 = int(cn_dict['c0'][0]*(math.sqrt(i+1)-math.sqrt(i)))
         cn_va2 = (cn_dict['c%d'%(i-1)][1]-int((2* cn_dict['c%d'%(i-1)][1])/(4*i+1)))
@@ -115,6 +116,8 @@ def main():
 
         if (cn_va2) < z_max_spd_period:
            break
+        n+=1
+    print('n===:',n)
     
     for idx, k in enumerate(cn_dict):
         print(idx,k,cn_dict[k])
@@ -122,7 +125,75 @@ def main():
     #    z_pulse_t = 60/z_rpm/z_spr
     #     z_pulse_period = Fcy*z_pulse_t 
 
+def pulse_calculation(max_rpm,spr):
+    iFcy = 60e6
+    iMaxSpd = max_rpm
+    iMaxSpd_period_count = int( (60/iMaxSpd/spr)*iFcy)
+    print('iMaxSpd_period_count:',iMaxSpd_period_count)
+
+    iAlpha = 2*math.pi  / spr
+    f_accel = iMaxSpd/14
+    f_accel = 5 if f_accel < 5 else f_accel
+
+    c0_f_accel_pulse_count = int((60/f_accel/spr)*iFcy)
+    print('c0_faccel:',c0_f_accel_pulse_count)
+    cn=[c0_f_accel_pulse_count]
+    for n in range(1,400):
+        cn_f_accel = cn[0]*( math.sqrt(n+1)-math.sqrt(n))
+        cn.append(int(cn_f_accel))
+        if cn_f_accel< iMaxSpd_period_count:
+            cn[n]=iMaxSpd_period_count
+            break
+    print(cn,len(cn))
+    
+    cm=[c0_f_accel_pulse_count]
+    for m in range(1,400):
+        cm_f_accel = cm[m-1] - ( 2* cm[m-1]/(4*m+1))
+        if m == 1:
+            cm_f_accel = cm_f_accel/1.448528938
+        cm.append(int(cm_f_accel))
+        if cm_f_accel< iMaxSpd_period_count:
+            cm[m]=iMaxSpd_period_count
+            break
+    print(cm,len(cm))
+
+    # rpm_cn_conv = []
+    # for idx,k in enumerate(cn):
+    #     rpm_cn_conv.append( 60*iFcy/spr/k)
+    cn_rpm = []
+    for idx, cn in enumerate(cn):
+        cn_rpm.append(float('{:4.1f}'.format(60*iFcy/spr/cn)))
+    cm_rpm = []
+    for idx, cm in enumerate(cm):
+        cm_rpm.append(float('{:4.1f}'.format(60*iFcy/spr/cm)))
+    print('cn_rpm:',cn_rpm)
+    print('cm_rpm:',cm_rpm)
+    # print(rpm_cn_conv)
+
+    cn_prm_s = []
+    for n in range(1,len(cn_rpm)):
+        cn_prm_s.append(float('{:4.2f}'.format(cn_rpm[n]-cn_rpm[n-1])))
+    print('cn_prm_s:',cn_prm_s)
+    
+    cm_prm_s = []
+    for n in range(1,len(cm_rpm)):
+        cm_prm_s.append(float('{:4.2f}'.format(cm_rpm[n]-cm_rpm[n-1])))
+    print('cm_prm_s:',cm_prm_s)
+
+    # rpm_s = []
+    # for r in range(1,len(rpm_cn_conv)):
+    #     rpm_s.append(rpm_cn_conv[r]-rpm_cn_conv[r-1])
+
+    # for _rpm in rpm_s:
+    #     print('{:4.3f}rpm_s'.format(_rpm))
+    # print('len(rpm_s):',len(rpm_s))
+
+    
+
+
+
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    pulse_calculation(123,1600)
