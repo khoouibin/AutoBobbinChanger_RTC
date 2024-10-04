@@ -497,6 +497,8 @@ char X_Jump_Settings()
     return 0;
 }
 
+
+
 char X_Jump_Update_DelayCount()
 {
     int period_hiword, period_loword, dutyon_hiword, dutyon_loword;
@@ -505,6 +507,7 @@ char X_Jump_Update_DelayCount()
     {
     case JmpAccel:
         tb_idx = x_pulse_jump_para.steps_counter;
+        tb_idx = (tb_idx < x_pulse_update_buffer.x_cx_seq_valid - 1) ? tb_idx : x_pulse_update_buffer.x_cx_seq_valid - 1;
         period_hiword = x_pulse_update_buffer.cx_seq[tb_idx].period.u16[1];
         period_loword = x_pulse_update_buffer.cx_seq[tb_idx].period.u16[0];
         dutyon_hiword = x_pulse_update_buffer.cx_seq[tb_idx].dutyon.u16[1];
@@ -519,7 +522,7 @@ char X_Jump_Update_DelayCount()
         break;
 
     case JmpFixed:
-        tb_idx = x_pulse_jump_para.accel_steps - 1;
+        tb_idx = x_pulse_update_buffer.x_cx_seq_valid - 1;
         period_hiword = x_pulse_update_buffer.cx_seq[tb_idx].period.u16[1];
         period_loword = x_pulse_update_buffer.cx_seq[tb_idx].period.u16[0];
         dutyon_hiword = x_pulse_update_buffer.cx_seq[tb_idx].dutyon.u16[1];
@@ -532,7 +535,7 @@ char X_Jump_Update_DelayCount()
         }
         break;
     case JmpDeaccel:
-        tb_idx = x_pulse_jump_para.deaccel_steps - x_pulse_jump_para.steps_counter - 1;
+        tb_idx = x_pulse_jump_para.deaccel_steps - x_pulse_jump_para.steps_counter - 2;
         tb_idx = (tb_idx < 0) ? 0 : tb_idx;
         period_hiword = x_pulse_update_buffer.cx_seq[tb_idx].period.u16[1];
         period_loword = x_pulse_update_buffer.cx_seq[tb_idx].period.u16[0];
