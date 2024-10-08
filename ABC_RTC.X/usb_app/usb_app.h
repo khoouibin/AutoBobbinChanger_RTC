@@ -334,16 +334,16 @@ typedef struct
 {
 	unsigned char cmd_id;
 	unsigned char sub_func;
-	unsigned char part_name;
-	unsigned char argv;
+	unsigned char argv_0;
+	unsigned char argv_1;
 } usb_msg_home_parts_t;
 
 typedef struct
 {
 	unsigned char cmd_id_rep;
 	unsigned char sub_func;
-	unsigned char part_name;
-	unsigned char part_status;
+	unsigned char home_procedure;
+	unsigned char home_status;
 } usb_msg_home_parts_reply_t;
 
 void USB_DeviceInitialize(void);

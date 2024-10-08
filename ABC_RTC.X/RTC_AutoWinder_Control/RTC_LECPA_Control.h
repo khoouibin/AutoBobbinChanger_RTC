@@ -18,6 +18,14 @@ typedef enum
 
 typedef enum
 {
+    LECPA_Home_Deny = -1,
+    LECPA_Home_Start = 0,
+    LECPA_Home_Wait = 1,
+    LECPA_Home_End = 2,
+} LECPA_Home_Status_t;
+
+typedef enum
+{
     LECPA_Init = 0,
     LECPA_ALARM_Ready,
     LECPA_SVRE_Ready,

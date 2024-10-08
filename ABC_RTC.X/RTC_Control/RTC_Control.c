@@ -585,13 +585,35 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         break;
 
     case Action_Home_Parts:
+        home_parts_reply.cmd_id_rep = RespPositive_HomeParts;
+        home_parts_reply.sub_func = p_home_parts_task->sub_func;
 
+        if (p_home_parts_task->sub_func == SubFunc_home_WinderStepper)
+        {
+            Nop(); // not yet implement
+        }
+        else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_100)
+        {
+            Nop(); // not yet implement
+        }
+        else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_30)
+        {
+            if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+            {
+                home_parts_reply.home_procedure = LECPA_Init;
+                home_parts_reply.home_status = LECPA_Home_Deny;
+            }
+            else
+            {
+                home_parts_reply.home_procedure = LECPA_Init;
+                home_parts_reply.home_status = LECPA_Home_Start;
+
+                // create a timer for homing.
+            }
+        }
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&home_parts_reply, 4);
         break;
-    }
-
-
-
-    
+    }    
 }
 
 void RTC_Control_Handler_Diagnosis(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)

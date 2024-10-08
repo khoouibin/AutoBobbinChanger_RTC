@@ -99,7 +99,7 @@
         <targetDevice>dsPIC33EP512MU814</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>snap</platformTool>
+        <platformTool>pk4hybrid</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>2</platform>
@@ -1766,7 +1766,7 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-7fffff"/>
         <property key="programmerToGoFilePath"
-                  value="/home/orisol/Code/Orisol/abc_stuff/abc_rtc/ABC_RTC.X/debug/default/ABC_RTC_ptg"/>
+                  value="/home/orisol/Code/Orisol/AutoBobbinChanger_RTC/ABC_RTC.X/debug/default/ABC_RTC_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>

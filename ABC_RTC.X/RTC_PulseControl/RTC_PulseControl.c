@@ -147,14 +147,6 @@ void z_pulse_gen_lookup_table(enum Zrpm rpm_value)
 void __attribute__((interrupt, no_auto_psv)) _OC2Interrupt(void)
 {
     IFS0bits.OC2IF = 0;
-
-    // if (Is_period_vary(&z_rpm_idx) == 0)
-    // {
-    //     z_pulse_gen_lookup_table(z_rpm_idx);
-    //     LATHbits.LATH15 = 1;
-    //     NOP20_MACRO();
-    //     LATHbits.LATH15 = 0;
-    // }
     if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
     {
         z_pulse_update_buffer.z_pulse_update_turn_off = 0;
@@ -176,14 +168,6 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void)
 {
     IFS0bits.T3IF = 0;
     TMR3 = 0;
-
-    // if (Is_period_vary(&z_rpm_idx) == 0)
-    // {
-    //     z_pulse_gen_lookup_table(z_rpm_idx);
-    //     LATHbits.LATH15 = 1;
-    //     NOP20_MACRO();
-    //     LATHbits.LATH15 = 0;
-    // }
     if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
     {
         z_pulse_update_buffer.z_pulse_update_turn_off = 0;
@@ -382,29 +366,12 @@ void x_pulse_gen_by_value(int period_hiword, int period_loword, int dutyon_hiwor
     }
 }
 
-// void x_pulse_gen_by_update_buf()
-// {
-//     if (period_hiword > 0)
-//     {
-//         OC3_OC4_Cascade_by_value(period_hiword, period_loword, dutyon_hiword, dutyon_loword);
-//     }
-//     else
-//     {
-//         OC4_SyncTmr4_by_value(dutyon_loword, period_loword);
-//     }
-// }
-
 char x_pulse_startup_by_tmr()
 {
     if (x_pulse_update_buffer.x_pulse_gen_enable == 1)
         return 0;
     if (x_pulse_update_buffer.x_pulse_update_mutex == 1)
     {
-        // x_pulse_update_buffer.z_pulse_update_mutex = 0;     wait steps decay to zero.
-        //  x_pulse_gen_by_value(x_pulse_update_buffer.cx_seq[0].period.u16[1],
-        //                       x_pulse_update_buffer.cx_seq[0].period.u16[0],
-        //                       x_pulse_update_buffer.cx_seq[0].dutyon.u16[1],
-        //                       x_pulse_update_buffer.cx_seq[0].dutyon.u16[0]);
         X_Jump_Settings();
         X_Jump_Update_DelayCount();
     }
@@ -419,32 +386,7 @@ void x_pulse_gen_off()
 void __attribute__((interrupt, no_auto_psv)) _OC4Interrupt(void)
 {
     IFS1bits.OC4IF = 0;
-    // LATHbits.LATH15 = 1;
-    // NOP20_MACRO();
-    // LATHbits.LATH15 = 0;
     X_Jump_Update_DelayCount();
-    // if (Is_period_vary(&z_rpm_idx) == 0)
-    // {
-    //     z_pulse_gen_lookup_table(z_rpm_idx);
-    //     LATHbits.LATH15 = 1;
-    //     NOP20_MACRO();
-    //     LATHbits.LATH15 = 0;
-    // }
-    // if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
-    // {
-    //     z_pulse_update_buffer.z_pulse_update_turn_off = 0;
-    //     z_pulse_update_buffer.z_pulse_update_mutex = 0;
-    //     z_pulse_gen_off();
-    // }
-
-    // if (z_pulse_update_buffer.z_pulse_update_mutex == 1)
-    // {
-    //     z_pulse_update_buffer.z_pulse_update_mutex = 0;
-    //     z_pulse_gen_by_value(z_pulse_update_buffer.z_pulse_update.period_hiword,
-    //                          z_pulse_update_buffer.z_pulse_update.period_loword,
-    //                          z_pulse_update_buffer.z_pulse_update.dutyon_hiword,
-    //                          z_pulse_update_buffer.z_pulse_update.dutyon_loword);
-    // }
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T4Interrupt(void)
@@ -452,29 +394,6 @@ void __attribute__((interrupt, no_auto_psv)) _T4Interrupt(void)
     IFS1bits.T4IF = 0;
     TMR4 = 0;
     X_Jump_Update_DelayCount();
-
-    // if (Is_period_vary(&z_rpm_idx) == 0)
-    // {
-    //     z_pulse_gen_lookup_table(z_rpm_idx);
-    //     LATHbits.LATH15 = 1;
-    //     NOP20_MACRO();
-    //     LATHbits.LATH15 = 0;
-    // }
-    // if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
-    // {
-    //     z_pulse_update_buffer.z_pulse_update_turn_off = 0;
-    //     z_pulse_update_buffer.z_pulse_update_mutex = 0;
-    //     z_pulse_gen_off();
-    // }
-
-    // if (z_pulse_update_buffer.z_pulse_update_mutex == 1)
-    // {
-    //     z_pulse_update_buffer.z_pulse_update_mutex = 0;
-    //     z_pulse_gen_by_value(z_pulse_update_buffer.z_pulse_update.period_hiword,
-    //                          z_pulse_update_buffer.z_pulse_update.period_loword,
-    //                          z_pulse_update_buffer.z_pulse_update.dutyon_hiword,
-    //                          z_pulse_update_buffer.z_pulse_update.dutyon_loword);
-    // }
 }
 
 char X_Jump_Settings()
