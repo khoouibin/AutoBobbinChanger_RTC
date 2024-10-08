@@ -24,6 +24,8 @@
       </logicalFolder>
       <logicalFolder name="f4" displayName="RTC_PulseControl" projectFiles="true">
         <itemPath>RTC_PulseControl/RTC_PulseControl.h</itemPath>
+        <itemPath>RTC_AutoWinder_Control/RTC_LECPA_Control.h</itemPath>
+        <itemPath>RTC_AutoWinder_Control/RTC_AutoWinder_Control.h</itemPath>
       </logicalFolder>
       <logicalFolder name="Timers" displayName="Timers" projectFiles="true">
         <itemPath>Timers/Timers.h</itemPath>
@@ -62,6 +64,8 @@
       </logicalFolder>
       <logicalFolder name="f4" displayName="RTC_PulseControl" projectFiles="true">
         <itemPath>RTC_PulseControl/RTC_PulseControl.c</itemPath>
+        <itemPath>RTC_AutoWinder_Control/RTC_AutoWinder_Control.c</itemPath>
+        <itemPath>RTC_AutoWinder_Control/RTC_LECPA_Control.c</itemPath>
       </logicalFolder>
       <logicalFolder name="Timers" displayName="Timers" projectFiles="true">
         <itemPath>Timers/Timers.c</itemPath>
@@ -247,7 +251,7 @@
       <C30Global>
         <property key="combine-sourcefiles" value="false"/>
         <property key="common-include-directories"
-                  value="Common;IO_Entity;Timers;RTC_Control;usb_app;usb;RTC_Profile;RTC_Log;RTC_PulseControl"/>
+                  value="Common;IO_Entity;Timers;RTC_Control;usb_app;usb;RTC_Profile;RTC_Log;RTC_PulseControl;RTC_AutoWinder_Control"/>
         <property key="dual-boot-partition" value="0"/>
         <property key="fast-math" value="false"/>
         <property key="generic-16-bit" value="false"/>
@@ -1761,6 +1765,8 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-7fffff"/>
+        <property key="programmerToGoFilePath"
+                  value="/home/orisol/Code/Orisol/abc_stuff/abc_rtc/ABC_RTC.X/debug/default/ABC_RTC_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>

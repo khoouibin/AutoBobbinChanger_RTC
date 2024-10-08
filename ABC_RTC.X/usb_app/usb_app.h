@@ -38,6 +38,8 @@ enum Protocol_Command
 	Cmd_EntityPack = 0x05,
 	Cmd_Z_PulseGen = 0x06,
 	Cmd_X_PulseGen = 0x07,
+	Cmd_ControlModeSwitch = 0x10,
+	Cmd_HomeParts = 0x11,
 	Cmd_MAX,
 };
 
@@ -51,6 +53,8 @@ enum Protocol_PositiveResponse
 	RespPositive_EntityPack = 0x45,
 	RespPositive_Z_PulseGen = 0x46,
 	RespPositive_X_PulseGen = 0x47,
+	RespPositive_ControlModeSwitch = 0x50,
+	RespPositive_HomeParts = 0x51,
 };
 
 enum Protocol_NegativeResponse
@@ -124,6 +128,23 @@ enum X_PulseGen_SubFunc
 	SubFunc_x_pulsemode_max,
 };
 
+enum ControlModeSwitch_SubFunc
+{
+	SubFunc_controlmode_uninit = 0,
+	SubFunc_controlmode_ready = 1,
+	SubFunc_controlmode_home = 2,
+	SubFunc_controlmode_diagnosis = 3,
+	SubFunc_controlmode_max,
+};
+
+enum HomeParts_SubFunc
+{
+	SubFunc_home_WinderStepper = 0,
+	SubFunc_home_LECPA_30 = 1,
+	SubFunc_home_LECPA_100 = 2,
+	SubFunc_home_max,
+};
+
 enum Reponse_Code
 {
 	POSITIVE_CODE = 0x00,
@@ -173,7 +194,7 @@ typedef struct
 {
 	unsigned char cmd_id;
 	unsigned char sub_func;
-	unsigned short  delay_time;
+	unsigned short delay_time;
 } usb_msg_reset_t;
 
 typedef struct
@@ -292,6 +313,38 @@ typedef struct
 	unsigned char argv_0;
 	unsigned char argv_1;
 } usb_msg_x_pulse_gen_reply_t;
+
+typedef struct
+{
+	unsigned char cmd_id;
+	unsigned char sub_func;
+	unsigned char argv_0;
+	unsigned char argv_1;
+} usb_msg_control_mode_switch_t;
+
+typedef struct
+{
+	unsigned char cmd_id_rep;
+	unsigned char sub_func;
+	unsigned char control_status;
+	unsigned char switch_status;
+} usb_msg_control_mode_switch_reply_t;
+
+typedef struct
+{
+	unsigned char cmd_id;
+	unsigned char sub_func;
+	unsigned char part_name;
+	unsigned char argv;
+} usb_msg_home_parts_t;
+
+typedef struct
+{
+	unsigned char cmd_id_rep;
+	unsigned char sub_func;
+	unsigned char part_name;
+	unsigned char part_status;
+} usb_msg_home_parts_reply_t;
 
 void USB_DeviceInitialize(void);
 void USB_TransStateInit(void);

@@ -18,6 +18,7 @@
 #include "RTC_Control.h"
 #include "usb_app.h"
 #include "RTC_PulseControl.h"
+#include "RTC_LECPA_Control.h"
 /** CONFIGURATION **************************************************/
 // 150729 add Macros for Configuration Fuse Registers as below
 //-----------------------------------------------------------------------------------------------------------------------------

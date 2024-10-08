@@ -257,7 +257,7 @@ char z_pulse_off_by_usb_msg()
     return res;
 }
 
-char z_pulse_update_by_usb_msg(int w, int x, int y, int z)
+char z_pulse_update_by_usb_msg(unsigned int w, unsigned int x, unsigned int y, unsigned int z)
 {
     if (z_pulse_update_buffer.z_pulse_update_mutex == 1)
         return -1;
@@ -419,9 +419,9 @@ void x_pulse_gen_off()
 void __attribute__((interrupt, no_auto_psv)) _OC4Interrupt(void)
 {
     IFS1bits.OC4IF = 0;
-    LATHbits.LATH15 = 1;
-    NOP20_MACRO();
-    LATHbits.LATH15 = 0;
+    // LATHbits.LATH15 = 1;
+    // NOP20_MACRO();
+    // LATHbits.LATH15 = 0;
     X_Jump_Update_DelayCount();
     // if (Is_period_vary(&z_rpm_idx) == 0)
     // {

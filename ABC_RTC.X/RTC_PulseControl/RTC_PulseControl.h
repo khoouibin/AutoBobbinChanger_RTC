@@ -314,7 +314,7 @@ typedef struct
 
 void z_pulse_gen_lookup_table(enum Zrpm rpm_value);
 char z_pulse_off_by_usb_msg();
-char z_pulse_update_by_usb_msg(int w, int x, int y, int z);
+char z_pulse_update_by_usb_msg(unsigned int w,unsigned int x,unsigned int y,unsigned int z);
 char z_pulse_startup_by_tmr();
 
 void x_pulse_settings(OCx_sequence_t x_pwm);
