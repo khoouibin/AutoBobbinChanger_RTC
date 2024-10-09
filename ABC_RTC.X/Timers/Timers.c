@@ -29,7 +29,7 @@ static unsigned long Tickx1ms;
 static unsigned char USBTimer_1msTick;
 static unsigned char USBTimer_TimeMode;
 static unsigned long Tickx1s_Flag;
-static TimersHandler_t TimersHandler[RTC_CONTROL_MAX] = {};
+static TimersHandler_t TimersHandler[RTC_CONTROL_TIMER_MAX] = {};
 
 void Init_Timers(void)
 {
@@ -58,7 +58,7 @@ void Init_Timers(void)
     Tickx1ms = 0;
     USBTimer_1msTick = 0;
     USBTimer_TimeMode = USBTimer_SLOW_INTERVAL_TIME_IN_MS;
-    for (index = 0; index < RTC_CONTROL_MAX; index++)
+    for (index = 0; index < RTC_CONTROL_TIMER_MAX; index++)
     {
         TimersHandler[index].ended_ms = TIME_INIT_VALUE;
         TimersHandler[index].period_ms = TIME_INIT_VALUE;

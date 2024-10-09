@@ -142,7 +142,17 @@ enum HomeParts_SubFunc
 	SubFunc_home_WinderStepper = 0,
 	SubFunc_home_LECPA_30 = 1,
 	SubFunc_home_LECPA_100 = 2,
+	SubFunc_home_WinderStepper_polling_reply = 10,
+	SubFunc_home_LECPA_30_polling_reply = 11,
+	SubFunc_home_LECPA_100_polling_reply = 12,
 	SubFunc_home_max,
+};
+
+enum HomeParts_SubCmd
+{
+	SubCmd_Abort = 0,
+	SubCmd_Start = 1,
+	SubCmd_max,
 };
 
 enum Reponse_Code
@@ -334,7 +344,7 @@ typedef struct
 {
 	unsigned char cmd_id;
 	unsigned char sub_func;
-	unsigned char argv_0;
+	unsigned char sub_cmd;
 	unsigned char argv_1;
 } usb_msg_home_parts_t;
 
@@ -342,8 +352,8 @@ typedef struct
 {
 	unsigned char cmd_id_rep;
 	unsigned char sub_func;
-	unsigned char home_procedure;
-	unsigned char home_status;
+	unsigned char home_routine;
+	unsigned char home_state;
 } usb_msg_home_parts_reply_t;
 
 void USB_DeviceInitialize(void);

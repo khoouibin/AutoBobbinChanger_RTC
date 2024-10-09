@@ -108,6 +108,11 @@ RTC_Control_State_t RTC_Control_Main(void)
                 }
             }
         }
+
+        if(Get_LECPA_30_HomeRoutine()>0)
+        {
+            LECPA_30_HomeRountineTask();
+        }
     }
     return control_state;
 }
@@ -523,7 +528,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         mode_switch_reply.cmd_id_rep = RespPositive_ControlModeSwitch;
         mode_switch_reply.sub_func = p_mode_switch_task->sub_func;
         mode_switch_reply.control_status = (char)control_state;
-        if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+        if (Is_LECPA_30_HomeRoutine_Idle() == -1)
         {
             mode_switch_reply.switch_status = SwitchMode_Fail;
         }
@@ -542,7 +547,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         mode_switch_reply.cmd_id_rep = RespPositive_ControlModeSwitch;
         mode_switch_reply.sub_func = p_mode_switch_task->sub_func;
         mode_switch_reply.control_status = (char)control_state;
-        if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+        if (Is_LECPA_30_HomeRoutine_Idle() == -1)
         {
             mode_switch_reply.switch_status = SwitchMode_Fail;
         }
@@ -570,7 +575,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         mode_switch_reply.cmd_id_rep = RespPositive_ControlModeSwitch;
         mode_switch_reply.sub_func = p_mode_switch_task->sub_func;
         mode_switch_reply.control_status = (char)control_state;
-        if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+        if (Is_LECPA_30_HomeRoutine_Idle() == -1)
         {
             mode_switch_reply.switch_status = SwitchMode_Fail;
         }
@@ -598,18 +603,19 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         }
         else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_30)
         {
-            if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+            if(p_home_parts_task->sub_cmd == SubCmd_Start)
             {
-                home_parts_reply.home_procedure = LECPA_Init;
-                home_parts_reply.home_status = LECPA_Home_Deny;
+                if (Is_LECPA_30_HomeRoutine_Idle() == 0)
+                {
+                    Set_LECPA_30_HomeStart();
+                }
             }
-            else
+            else if(p_home_parts_task->sub_cmd == SubCmd_Abort)
             {
-                home_parts_reply.home_procedure = LECPA_Init;
-                home_parts_reply.home_status = LECPA_Home_Start;
-
-                // create a timer for homing.
+                Set_LECPA_30_HomeAbort();
             }
+            home_parts_reply.home_routine = Get_LECPA_30_HomeRoutine();
+            home_parts_reply.home_state = Get_LECPA_30_HomeState();
         }
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&home_parts_reply, 4);
         break;

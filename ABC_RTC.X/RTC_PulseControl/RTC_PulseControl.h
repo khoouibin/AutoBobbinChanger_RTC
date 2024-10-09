@@ -290,28 +290,6 @@ typedef struct
     unsigned short steps_counter;
 } X_Pulse_Jump_Para_t;
 
-// typedef   struct 
-// {
-// 	unsigned short int  Distance;				// total steps
-// 	unsigned short int  Acc_Steps;				// steps to acc 
-// 	unsigned short int	Fixed_Steps;			// steps with constant speed
-// 	unsigned short int  Deacc_Steps;			// steps to deacc ( =acc/acc-1)
-// 	unsigned short int	ds_div_acc_l ;			// factor step/acc* 10^10
-// 	unsigned short int	ds_div_acc_h ;			// shifts of low part
-
-// } Jump_Param_t ;
-
-
-
-// typedef  struct
-// {
-// 		Jump_State_t		State ;					// acc, fixed, deacc
-// 		unsigned short int	Steps_in_State ;		// steps done at acc/fix/deacc phases
-// 		unsigned short int	Acc_Time ;				// accumulated time in acc and deacc(rev) 
-// 		unsigned short int	Dt ;					// last dt 
-
-// }  Jump_Status_t ;
-
 void z_pulse_gen_lookup_table(enum Zrpm rpm_value);
 char z_pulse_off_by_usb_msg();
 char z_pulse_update_by_usb_msg(unsigned int w,unsigned int x,unsigned int y,unsigned int z);
