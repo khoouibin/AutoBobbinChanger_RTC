@@ -8,6 +8,7 @@
 #include "RTC_IOports.h"
 #include "IO_Control.h"
 #include "IO_Entity.h"
+#include "RTC_Control.h"
 
 unsigned char USB_RxBuf[MSG_MAX_SIZE];
 
@@ -280,6 +281,11 @@ bool USB_Msg_Parser(USB_Task_msg_t *task_msg)
             snprintf(neg_msg, 60, "error message:%s", "_size out of range");
             USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
         }
+        else if (nrc_res == NRC_ILLEGAL_RTC_MODE)
+        {
+            snprintf(neg_msg, 60, "error message:%s", "command not suit for rtc mode");
+            USB_NegResp(p_taskmsg->cmd_id, nrc_res, neg_msg);
+        }
         else
         {
             snprintf(neg_msg, 60, "error message:%s", "unknown command message");
@@ -430,6 +436,20 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
         }
         break;
 
+    case Cmd_HomeParts:
+        res_code = NRC_SUBFUNC_OUTRANGE;
+        for (i = 0; i < SubFunc_home_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
+        res_code = NRC_ILLEGAL_RTC_MODE;
+        if ( Get_RTC_Control_State() == RTC_CONTROL_STATE_HOME)
+            res_code = POSITIVE_CODE;
+        break;
     }
     return res_code;
 }

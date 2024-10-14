@@ -27,7 +27,7 @@ typedef struct
 	char carry_flag;
 } TimersHandler_t;
 
-// static unsigned long Timers_Handles[ RTC_CONTROL_MAX ];
+// static unsigned long Timers_Handles[ RTC_CONTROL_TIMER_MAX ];
 typedef enum
 {
 	USBTimer_Interrupt_Fast_Speed = 0,

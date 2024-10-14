@@ -115,13 +115,7 @@ int main(void)
     RTC_Control_State_t Is_Exit_RTC_Control = RTC_CONTROL_STATE_UNDEFINE;
     Initialize_System();
     Initialize_Communication_Modules();
-
-    // OCx_sequence_t x_cnt;
-    // x_cnt.period.u16[1] = 0x0006;
-    // x_cnt.period.u16[0] = 0xddd0;
-    // x_cnt.dutyon.u16[1] = 0x0003;
-    // x_cnt.dutyon.u16[0] = 0x6ee8;
-    // x_pulse_settings(x_cnt);
+    Set_LECPA_100_Init();
 
     Is_Exit_RTC_Control = RTC_Control_Main();
     if (Is_Exit_RTC_Control == RTC_CONTROL_RESET)

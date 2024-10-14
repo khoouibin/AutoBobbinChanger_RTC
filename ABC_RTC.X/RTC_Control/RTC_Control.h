@@ -57,9 +57,10 @@ typedef enum
 	RTC_CONTROL_WINK = 0,
     RTC_CONTROL_RESET_DELAY = 1,
     RTC_CONTROL_ENTITYTABLE_POLLING = 2,
-    RTC_CONTROL_LECPA_30_HOME_POLLING = 3,
-    RTC_CONTROL_LECPA_100_HOME_POLLING = 4,
-	RTC_CONTROL_MAX,
+    RTC_CONTROL_LECPA_30_HOME_POLLING = 3,   
+    RTC_CONTROL_LECPA_100_HOME_POLLING = 5,
+    RTC_CONTROL_LECPA_100_DRIVE_POLLING=6,
+	RTC_CONTROL_TIMER_MAX,
 } RTC_Control_Timer_type_t;
 
 typedef enum
@@ -70,7 +71,7 @@ typedef enum
 } RTC_Control_Event_t;
 
 RTC_Control_State_t RTC_Control_Main(void);
-
+RTC_Control_State_t Get_RTC_Control_State();
 
 #endif
 

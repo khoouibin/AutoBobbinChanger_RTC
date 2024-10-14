@@ -26,6 +26,11 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
 void RTC_Control_Handler_Diagnosis(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg);
 void RTC_Control_Wink_Entity_Debug(char *flag, unsigned long delay_time, int entity_name);
 
+RTC_Control_State_t Get_RTC_Control_State()
+{
+    return control_state;
+} 
+
 RTC_Control_State_t RTC_Control_Main(void)
 {
     USB_Task_msg_t Task_msg;
@@ -107,6 +112,16 @@ RTC_Control_State_t RTC_Control_Main(void)
                     USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&entity_tab_reply, sizeof(usb_msg_entitytable_t));
                 }
             }
+        }
+
+        if(Get_LECPA_100_HomeRoutine()>0)
+        {
+            LECPA_100_HomeRountineTask();
+        }
+
+        if(Is_LECPA_100_DriveTaskRunning() == 0)
+        {
+            LECPA_100_DriveRountineTask();
         }
     }
     return control_state;
@@ -321,7 +336,7 @@ void RTC_Control_Handler_Uninit(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_ms
     usb_msg_control_mode_switch_t *p_mode_switch_task = (usb_msg_control_mode_switch_t *)task_msg;
     usb_msg_control_mode_switch_reply_t mode_switch_reply;
 
-    RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Uninit_ms, IO_ZA2_PISTON_ENTITY);
+    //RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Uninit_ms, IO_ZA2_PISTON_ENTITY);
 
     switch (cmd)
     {
@@ -400,7 +415,7 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
     OCx_src_t ocx_scr;
 
     static char led_wink_status = -1;
-    RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Ready_ms, IO_ZA2_PISTON_ENTITY);
+    //RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Ready_ms, IO_ZA2_PISTON_ENTITY);
 
 
     switch (cmd)
@@ -506,7 +521,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
 
     char log_msg[60];
     static char led_wink_status = -1;
-    RTC_Control_Wink_Entity_Debug(&led_wink_status, C_RTC_CONTROL_WINK_Home_ms, IO_ZA2_PISTON_ENTITY);
+    //RTC_Control_Wink_Entity_Debug(&led_wink_status, C_RTC_CONTROL_WINK_Home_ms, IO_ZA2_PISTON_ENTITY);
 
     switch (cmd)
     {
@@ -523,7 +538,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         mode_switch_reply.cmd_id_rep = RespPositive_ControlModeSwitch;
         mode_switch_reply.sub_func = p_mode_switch_task->sub_func;
         mode_switch_reply.control_status = (char)control_state;
-        if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+        if (Is_LECPA_100_HomeRoutine_Idle() == -1)
         {
             mode_switch_reply.switch_status = SwitchMode_Fail;
         }
@@ -542,7 +557,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         mode_switch_reply.cmd_id_rep = RespPositive_ControlModeSwitch;
         mode_switch_reply.sub_func = p_mode_switch_task->sub_func;
         mode_switch_reply.control_status = (char)control_state;
-        if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+        if (Is_LECPA_100_HomeRoutine_Idle() == -1)
         {
             mode_switch_reply.switch_status = SwitchMode_Fail;
         }
@@ -570,7 +585,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         mode_switch_reply.cmd_id_rep = RespPositive_ControlModeSwitch;
         mode_switch_reply.sub_func = p_mode_switch_task->sub_func;
         mode_switch_reply.control_status = (char)control_state;
-        if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+        if (Is_LECPA_100_HomeRoutine_Idle() == -1)
         {
             mode_switch_reply.switch_status = SwitchMode_Fail;
         }
@@ -592,24 +607,25 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         {
             Nop(); // not yet implement
         }
-        else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_100)
+        else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_30)
         {
             Nop(); // not yet implement
         }
-        else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_30)
+        else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_100)
         {
-            if (Is_LECPA_30_HomeProcedure_Idle() == -1)
+            if(p_home_parts_task->sub_cmd == SubCmd_Start)
             {
-                home_parts_reply.home_procedure = LECPA_Init;
-                home_parts_reply.home_status = LECPA_Home_Deny;
+                if (Is_LECPA_100_HomeRoutine_Idle() == 0)
+                {
+                    Set_LECPA_100_HomeStart();
+                }
             }
-            else
+            else if(p_home_parts_task->sub_cmd == SubCmd_Abort)
             {
-                home_parts_reply.home_procedure = LECPA_Init;
-                home_parts_reply.home_status = LECPA_Home_Start;
-
-                // create a timer for homing.
+                Set_LECPA_100_HomeAbort();
             }
+            home_parts_reply.home_routine = Get_LECPA_100_HomeRoutine();
+            home_parts_reply.home_state = Get_LECPA_100_HomeState();
         }
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&home_parts_reply, 4);
         break;
@@ -623,7 +639,7 @@ void RTC_Control_Handler_Diagnosis(CommonMsg_Actions_t cmd, USB_Task_msg_t *task
     static char led_wink_status = -1;
     char log_msg[60];
     
-    RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Diagnosis_ms, IO_ZA2_PISTON_ENTITY);
+    //RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Diagnosis_ms, IO_ZA2_PISTON_ENTITY);
 
     switch (cmd)
     {

@@ -40,7 +40,8 @@ enum Protocol_Command
 	Cmd_X_PulseGen = 0x07,
 	Cmd_ControlModeSwitch = 0x10,
 	Cmd_HomeParts = 0x11,
-	Cmd_MAX,
+	Cmd_LECPA_100_Control = 0x12,
+	Cmd_MAX,//0x3f
 };
 
 enum Protocol_PositiveResponse
@@ -55,6 +56,7 @@ enum Protocol_PositiveResponse
 	RespPositive_X_PulseGen = 0x47,
 	RespPositive_ControlModeSwitch = 0x50,
 	RespPositive_HomeParts = 0x51,
+	RespPositive_LECPA_100_Control = 0x52,
 };
 
 enum Protocol_NegativeResponse
@@ -142,7 +144,34 @@ enum HomeParts_SubFunc
 	SubFunc_home_WinderStepper = 0,
 	SubFunc_home_LECPA_30 = 1,
 	SubFunc_home_LECPA_100 = 2,
+	SubFunc_home_WinderStepper_polling_reply = 10,
+	SubFunc_home_LECPA_30_polling_reply = 11,
+	SubFunc_home_LECPA_100_polling_reply = 12,
 	SubFunc_home_max,
+};
+
+enum HomeParts_SubCmd
+{
+	SubCmd_Abort = 0,
+	SubCmd_Start = 1,
+	SubCmd_max,
+};
+
+enum LECPA_SubFunc
+{
+	SubFunc_Move_OrgPoint = 1, // without subcmd
+	SubFunc_Move_MinPoint = 2, // without subcmd
+	SubFunc_Move_MaxPoint = 3, // without subcmd
+	SubFunc_Move_AnyPoint = 4, // with subcmd
+	SubFunc_ServoOn = 5,	   // without subcmd
+	SubFunc_ServoOff = 6,	   // without subcmd
+	SubFunc_Move_OrgPoint_polling_reply = 11,
+	SubFunc_Move_MinPoint_polling_reply = 12,
+	SubFunc_Move_MaxPoint_polling_reply = 13,
+	SubFunc_Move_AnyPoint_polling_reply = 14,
+	SubFunc_ServoOn_polling_reply = 15,
+	SubFunc_ServoOff_polling_reply = 16,
+	SubFunc_max,
 };
 
 enum Reponse_Code
@@ -154,6 +183,7 @@ enum Reponse_Code
 	NRC_SUBFUNC_OUTRANGE = 0x84,
 	NRC_DATA_OUTRANGE = 0x85,
 	NRC_CMD_NOT_FOUND = 0x86,
+	NRC_ILLEGAL_RTC_MODE = 0x87,
 };
 
 typedef struct
@@ -334,7 +364,7 @@ typedef struct
 {
 	unsigned char cmd_id;
 	unsigned char sub_func;
-	unsigned char argv_0;
+	unsigned char sub_cmd;
 	unsigned char argv_1;
 } usb_msg_home_parts_t;
 
@@ -342,9 +372,25 @@ typedef struct
 {
 	unsigned char cmd_id_rep;
 	unsigned char sub_func;
-	unsigned char home_procedure;
-	unsigned char home_status;
+	unsigned char home_routine;
+	unsigned char home_state;
 } usb_msg_home_parts_reply_t;
+
+typedef struct
+{
+	unsigned char cmd_id;
+	unsigned char sub_func;
+	signed short position_cmd;
+	OCx_src_t x_sequence;
+} usb_msg_lecpa_drive_cmd_t;
+
+typedef struct
+{
+	unsigned char cmd_id_rep;
+	unsigned char sub_func;
+	char drive_state;
+	char argv_1;
+} usb_msg_lecpa_drive_cmd_reply_t;
 
 void USB_DeviceInitialize(void);
 void USB_TransStateInit(void);
