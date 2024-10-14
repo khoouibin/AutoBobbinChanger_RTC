@@ -348,7 +348,7 @@ char LECPA_100_DriveRountineTask()
     usb_msg_lecpa_drive_cmd_reply_t drive_rountine_reply;
     LECPA_Drive_Status_t *pLECAP_100_DStatus =&LECAP_100_DriveStatus;
 
-    if (SysTimer_IsTimerExpiered(RTC_CONTROL_LECPA_100_HOME_POLLING) == 0)
+    if (SysTimer_IsTimerExpiered(RTC_CONTROL_LECPA_100_DRIVE_POLLING) == 0)
         return 0;
     
     snprintf(log_msg, 60, "LECPA_100_DriveTask");
@@ -361,41 +361,42 @@ char LECPA_100_DriveRountineTask()
         break;
 
     case Drive_Servo_On:
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_HOME_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         drive_rountine_reply.sub_func = SubFunc_ServoOn_polling_reply;
         break;
         
     case Drive_Servo_Off:
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_HOME_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         drive_rountine_reply.sub_func = SubFunc_ServoOff_polling_reply;
         break;        
             
             
     case Drive_Move_OrgPoint:
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_HOME_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         drive_rountine_reply.sub_func = SubFunc_Move_OrgPoint_polling_reply;
 
         break;
 
     case Drive_Move_MinPoint:
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_HOME_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         drive_rountine_reply.sub_func = SubFunc_Move_MinPoint_polling_reply;
 
         break;
 
     case Drive_Move_MaxPoint:
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_HOME_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         drive_rountine_reply.sub_func = SubFunc_Move_MaxPoint_polling_reply;
 
         break;
 
     case Drive_Move_AnyPoint:
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_HOME_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         drive_rountine_reply.sub_func = SubFunc_Move_AnyPoint_polling_reply;
 
         break;
     }
    
     USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
+
     return 0;
 }

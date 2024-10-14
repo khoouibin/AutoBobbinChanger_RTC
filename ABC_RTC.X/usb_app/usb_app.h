@@ -174,6 +174,7 @@ enum LECPA_SubFunc
 	SubFunc_max,
 };
 
+
 enum Reponse_Code
 {
 	POSITIVE_CODE = 0x00,
