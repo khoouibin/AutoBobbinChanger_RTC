@@ -3,6 +3,9 @@
 #include "Ons_General.h"
 #include "IO_Entity.h"
 
+#define C_INPUT_ENTITY_ACTIVE 0
+#define C_INPUT_ENTITY_INACTIVE 1
+
 typedef enum
 {
     INPUT_BUSY_PIN14 = IO_Y_HOME_SENSOR_ENTITY,  

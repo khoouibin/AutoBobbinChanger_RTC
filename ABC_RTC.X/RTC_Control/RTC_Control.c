@@ -324,6 +324,14 @@ CommonMsg_Actions_t RTC_Control_Hander_CommonMsg(USB_Task_msg_t *task_msg)
         res = Action_Home_Parts;
         break;
 
+    case Cmd_LECPA_100_Control:
+        res = Action_LECPA_100_Control;
+        break;
+
+    case Cmd_LECPA_30_Control:
+        res = Action_LECPA_30_Control;
+        break;
+
     default:
         res = Action_DoNothing;
     }
@@ -354,6 +362,12 @@ void RTC_Control_Handler_Uninit(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_ms
     case Action_PulseGen_Z:
     case Action_PulseGen_X:
         snprintf(log_msg, 60, "Action PulseGen illegal, rtc mode:%d", control_state);
+        RTC_LogMsg(Debug_Lev, log_msg);
+        break;
+
+    case Action_LECPA_100_Control:
+    case Action_LECPA_30_Control:
+        snprintf(log_msg, 60, "Action LECPAx illegal, rtc mode:%d", control_state);
         RTC_LogMsg(Debug_Lev, log_msg);
         break;
 
@@ -413,9 +427,12 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
     usb_msg_z_pulse_gen_reply_t z_pulse_gen_reply;
     usb_msg_x_pulse_gen_t *p_x_pulse_gen_task;
     usb_msg_x_pulse_gen_reply_t x_pulse_gen_reply;
+    usb_msg_lecpa_drive_cmd_t *p_lecpa_drive_task;
+    usb_msg_lecpa_drive_cmd_reply_t lecpa_drive_reply;
     OCx_src_t ocx_scr;
 
     static char led_wink_status = -1;
+    LECPA_Drive_Command_t lecpa_cmd=Drive_Command_Null;
     //RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Ready_ms, IO_ZA2_PISTON_ENTITY);
 
 
@@ -463,6 +480,25 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
         x_pulse_gen_reply.argv_0 = Dummy_00;
         x_pulse_gen_reply.argv_1 = Dummy_00;
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&x_pulse_gen_reply, 4);
+        break;
+
+    case Action_LECPA_100_Control:
+        p_lecpa_drive_task = (usb_msg_lecpa_drive_cmd_t *)task_msg;
+        if (Is_LECPA_100_DriveTaskRunning() == -1)
+        {
+            lecpa_cmd = (LECPA_Drive_Command_t)p_lecpa_drive_task->sub_func;
+            Set_LECPA_100_DriveTask(lecpa_cmd);
+        }
+        lecpa_drive_reply.cmd_id_rep = RespPositive_LECPA_100_Control;
+        lecpa_drive_reply.sub_func = p_lecpa_drive_task->sub_func;
+        lecpa_drive_reply.drive_state = Get_LECPA_100_DriveState();
+        lecpa_drive_reply.drive_state = Get_LECPA_100_DriveState();
+        lecpa_drive_reply.argv_1 = Dummy_00;
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&lecpa_drive_reply, 4);
+        break;
+
+    case Action_LECPA_30_Control:
+        Nop();
         break;
 
     case Action_Home_Parts:
@@ -535,6 +571,13 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         snprintf(log_msg, 60, "Action PulseGen illegal, rtc mode:%d", control_state);
         RTC_LogMsg(Debug_Lev, log_msg);
         break;
+
+    case Action_LECPA_100_Control:
+    case Action_LECPA_30_Control:
+        snprintf(log_msg, 60, "Action LECPAx illegal, rtc mode:%d", control_state);
+        RTC_LogMsg(Debug_Lev, log_msg);
+        break;
+
     case Action_SwithMode_Uninit:
         mode_switch_reply.cmd_id_rep = RespPositive_ControlModeSwitch;
         mode_switch_reply.sub_func = p_mode_switch_task->sub_func;
@@ -663,6 +706,12 @@ void RTC_Control_Handler_Diagnosis(CommonMsg_Actions_t cmd, USB_Task_msg_t *task
     case Action_PulseGen_Z:
     case Action_PulseGen_X:
         snprintf(log_msg, 60, "Action PulseGen illegal, rtc mode:%d", control_state);
+        RTC_LogMsg(Debug_Lev, log_msg);
+        break;
+
+    case Action_LECPA_100_Control:
+    case Action_LECPA_30_Control:
+        snprintf(log_msg, 60, "Action LECPAx illegal, rtc mode:%d", control_state);
         RTC_LogMsg(Debug_Lev, log_msg);
         break;
 

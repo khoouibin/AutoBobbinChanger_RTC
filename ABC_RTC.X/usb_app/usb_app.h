@@ -41,6 +41,7 @@ enum Protocol_Command
 	Cmd_ControlModeSwitch = 0x10,
 	Cmd_HomeParts = 0x11,
 	Cmd_LECPA_100_Control = 0x12,
+	Cmd_LECPA_30_Control = 0x13,
 	Cmd_MAX,//0x3f
 };
 
@@ -57,6 +58,7 @@ enum Protocol_PositiveResponse
 	RespPositive_ControlModeSwitch = 0x50,
 	RespPositive_HomeParts = 0x51,
 	RespPositive_LECPA_100_Control = 0x52,
+	RespPositive_LECPA_30_Control = 0x53,
 };
 
 enum Protocol_NegativeResponse
@@ -159,19 +161,19 @@ enum HomeParts_SubCmd
 
 enum LECPA_SubFunc
 {
-	SubFunc_Move_OrgPoint = 1, // without subcmd
-	SubFunc_Move_MinPoint = 2, // without subcmd
-	SubFunc_Move_MaxPoint = 3, // without subcmd
-	SubFunc_Move_AnyPoint = 4, // with subcmd
-	SubFunc_ServoOn = 5,	   // without subcmd
-	SubFunc_ServoOff = 6,	   // without subcmd
-	SubFunc_Move_OrgPoint_polling_reply = 11,
-	SubFunc_Move_MinPoint_polling_reply = 12,
-	SubFunc_Move_MaxPoint_polling_reply = 13,
-	SubFunc_Move_AnyPoint_polling_reply = 14,
-	SubFunc_ServoOn_polling_reply = 15,
-	SubFunc_ServoOff_polling_reply = 16,
-	SubFunc_max,
+	SubFunc_LECPA_Mov_OrgPoint = 1, // without subcmd
+	SubFunc_LECPA_Mov_MinPoint = 2, // without subcmd
+	SubFunc_LECPA_Mov_MaxPoint = 3, // without subcmd
+	SubFunc_LECPA_Mov_AnyPoint = 4, // with subcmd
+	SubFunc_LECPA_Set_ServoOn = 5,	   // without subcmd
+	SubFunc_LECPA_Set_ServoOff = 6,	   // without subcmd
+	SubFunc_LECPA_Mov_OrgPoint_polling_reply = 11,
+	SubFunc_LECPA_Mov_MinPoint_polling_reply = 12,
+	SubFunc_LECPA_Mov_MaxPoint_polling_reply = 13,
+	SubFunc_LECPA_Mov_AnyPoint_polling_reply = 14,
+	SubFunc_LECPA_Set_ServoOn_polling_reply = 15,
+	SubFunc_LECPA_Set_ServoOff_polling_reply = 16,
+	SubFunc_LECPA_max,
 };
 
 

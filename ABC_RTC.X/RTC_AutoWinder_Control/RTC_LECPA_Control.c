@@ -278,10 +278,8 @@ char RTC_LECPA_100_ServoCmd(LECPA_ServoDef_t servo_cmd)
     }
     else
     {
-
         res = -1;
     }
-
     return res;
 }
 
@@ -292,6 +290,15 @@ char Is_LECPA_100_DriveTaskRunning()
     else
         return 0;
 }
+
+char Is_LECPA_100_SVRE_On()
+{
+    if (GetIO_ByEntityName(INPUT_SVRE_PIN17) == C_INPUT_ENTITY_ACTIVE)
+        return 0;
+    else
+        return -1;
+}
+
 
 char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd)
 {
@@ -304,18 +311,18 @@ char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd)
 
     switch (cmd)
     {
-        case Drive_Command_Null:
-            Nop();
-            break;
+    case Drive_Command_Null:
+        Nop();
+        break;
+
     case Drive_Servo_On:
-        
         pLECAP_100_DStatus->drive_command = Drive_Servo_On;
         break;
 
-    case Drive_Servo_Off:    
+    case Drive_Servo_Off:
         pLECAP_100_DStatus->drive_command = Drive_Servo_Off;
         break;
-        
+
     case Drive_Move_OrgPoint:
         pLECAP_100_DStatus->drive_command = Drive_Move_OrgPoint;
         pLECAP_100_DStatus->drive_state = Drive_Moving_OrgPoint;
@@ -341,6 +348,15 @@ char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd)
     return 0;
 }
 
+char Get_LECPA_100_DriveState()
+{
+    char tmp = 0x00;
+    LECPA_Drive_Status_t *pLECAP_100_DStatus = &LECAP_100_DriveStatus;
+    tmp = 0x0f & pLECAP_100_DStatus->drive_state;
+    tmp = ((pLECAP_100_DStatus->servo_status << 4) & 0xf0) | tmp;
+    return tmp;
+}   
+
 char LECPA_100_DriveRountineTask()
 {
     char log_msg[60];
@@ -350,9 +366,10 @@ char LECPA_100_DriveRountineTask()
 
     if (SysTimer_IsTimerExpiered(RTC_CONTROL_LECPA_100_DRIVE_POLLING) == 0)
         return 0;
-    
-    snprintf(log_msg, 60, "LECPA_100_DriveTask");
-    RTC_LogMsg(Debug_Lev, log_msg);
+    drive_rountine_reply.cmd_id_rep = RespPositive_LECPA_100_Control;
+    drive_rountine_reply.argv_1 = Dummy_00;
+    // snprintf(log_msg, 60, "LECPA_100_DriveTask");
+    // RTC_LogMsg(Debug_Lev, log_msg);
             
     switch (pLECAP_100_DStatus->drive_command)
     {
@@ -362,40 +379,51 @@ char LECPA_100_DriveRountineTask()
 
     case Drive_Servo_On:
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        drive_rountine_reply.sub_func = SubFunc_ServoOn_polling_reply;
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Set_ServoOn_polling_reply;
+        RTC_LECPA_100_ServoCmd(SERVO_ON);
+        if (Is_LECPA_100_SVRE_On() == 0)
+        {
+            pLECAP_100_DStatus->servo_status = SERVO_ON;
+            pLECAP_100_DStatus->drive_command = Drive_Command_Null;
+        }      
         break;
         
     case Drive_Servo_Off:
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        drive_rountine_reply.sub_func = SubFunc_ServoOff_polling_reply;
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Set_ServoOff_polling_reply;
+        RTC_LECPA_100_ServoCmd(SERVO_OFF);
+        if (Is_LECPA_100_SVRE_On() == -1)
+        {
+            pLECAP_100_DStatus->servo_status = SERVO_OFF;
+            pLECAP_100_DStatus->drive_command = Drive_Command_Null;
+        }        
         break;        
-            
-            
+
     case Drive_Move_OrgPoint:
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        drive_rountine_reply.sub_func = SubFunc_Move_OrgPoint_polling_reply;
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_OrgPoint_polling_reply;
 
         break;
 
     case Drive_Move_MinPoint:
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        drive_rountine_reply.sub_func = SubFunc_Move_MinPoint_polling_reply;
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_MinPoint_polling_reply;
 
         break;
 
     case Drive_Move_MaxPoint:
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        drive_rountine_reply.sub_func = SubFunc_Move_MaxPoint_polling_reply;
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_MaxPoint_polling_reply;
 
         break;
 
     case Drive_Move_AnyPoint:
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        drive_rountine_reply.sub_func = SubFunc_Move_AnyPoint_polling_reply;
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_AnyPoint_polling_reply;
 
         break;
     }
-   
+    drive_rountine_reply.drive_state = Get_LECPA_100_DriveState();
     USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
 
     return 0;

@@ -299,8 +299,8 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
 {
     unsigned char res_code = NRC_CMD_NOT_FOUND;
     unsigned char i;
-    usb_msg_log_t *p_log_task=(usb_msg_log_t *)task_msg;
-    usb_msg_entity_pack_t *p_entity_pack_task =(usb_msg_entity_pack_t*)task_msg;
+    usb_msg_log_t *p_log_task = (usb_msg_log_t *)task_msg;
+    usb_msg_entity_pack_t *p_entity_pack_task = (usb_msg_entity_pack_t *)task_msg;
 
     for (i = 0; i < Cmd_MAX; i++)
     {
@@ -447,8 +447,20 @@ unsigned char Is_USB_Msg_NegResponse(USB_Task_msg_t *task_msg)
             }
         }
         res_code = NRC_ILLEGAL_RTC_MODE;
-        if ( Get_RTC_Control_State() == RTC_CONTROL_STATE_HOME)
+        if (Get_RTC_Control_State() == RTC_CONTROL_STATE_HOME)
             res_code = POSITIVE_CODE;
+        break;
+
+    case Cmd_LECPA_100_Control:
+        res_code = NRC_SUBFUNC_OUTRANGE;
+        for (i = 0; i < SubFunc_LECPA_max; i++)
+        {
+            if (i == task_msg->sub_func)
+            {
+                res_code = POSITIVE_CODE;
+                break;
+            }
+        }
         break;
     }
     return res_code;

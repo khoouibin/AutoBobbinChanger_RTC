@@ -42,6 +42,8 @@ typedef enum
     Action_SwithMode_Diagnosis = 13,
     Action_PulseGen_Z = 20,
     Action_PulseGen_X = 21,
+    Action_LECPA_100_Control = 22,
+    Action_LECPA_30_Control = 23,
     Action_Home_Parts = 30,
 } CommonMsg_Actions_t;
 
