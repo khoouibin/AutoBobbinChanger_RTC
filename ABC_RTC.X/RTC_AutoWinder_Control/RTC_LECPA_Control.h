@@ -61,6 +61,13 @@ typedef enum
 
 typedef enum
 {
+    DriveBUSY_notSTART = 0,
+    DriveBUSY_On = 1,
+    DriveBUSY_Off = 2,
+} LECPA_DriveBUSY_State_t;
+
+typedef enum
+{
     SERVO_OFF = 0,
     SERVO_ON = 1,
 } LECPA_ServoDef_t;
@@ -110,21 +117,29 @@ typedef struct
     unsigned int u16_home_task_seton_sec;
 } LECPA_HomeTask_Vars_t;
 
+// lecpa-100 total = 15000pulse.
+// assume shift = 7500
+// min = -7500,
+// max =  7499
+// any : -7500 <= any <= 7499
 typedef struct
 {
-    unsigned int o_point_shift; //shift position
-    unsigned int max_point;
-    unsigned int min_point;
     unsigned long drive_task_polling_ms;
+    signed short shift_pos; // shift position = 7500
+    signed short max_point;
+    signed short min_point;
+    signed short org_point; // org_point should located between max_point and min_point.
 } LECPA_Drive_Parameters_t;
 
 typedef struct
 {
-    char home_successful;
-    int current_position;
-    int position_command;
+    char home_successful; // if servo-off, home_successful set -1.
+    signed short LECPA_inner_position;
+    signed short LECPA_inner_command;
+    signed short position_cmd; // position_cmd should between max_point and min_point.
     LECPA_ServoDef_t servo_status;
     LECPA_Drive_State_t drive_state;
+    LECPA_DriveBUSY_State_t busy_state;
     LECPA_Drive_Command_t drive_command;
 } LECPA_Drive_Status_t;
 
@@ -140,7 +155,7 @@ char Set_LECPA_100_HomeAbort();
 char LECPA_100_HomeRountineTask();
 
 char Get_LECPA_100_DriveState();
-char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd);
+char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd, int any_point_value);
 
 char Is_LECPA_100_DriveTaskRunning();
 char LECPA_100_DriveRountineTask();

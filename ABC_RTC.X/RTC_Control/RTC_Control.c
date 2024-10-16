@@ -420,6 +420,7 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
 {
     char log_msg[60];
     unsigned short u16_tmp1, u16_tmp2, u16_tmp3, u16_tmp4;
+    signed short s16_tmp1;
 
     usb_msg_control_mode_switch_t *p_mode_switch_task = (usb_msg_control_mode_switch_t *)task_msg;
     usb_msg_control_mode_switch_reply_t mode_switch_reply;
@@ -487,11 +488,18 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
         if (Is_LECPA_100_DriveTaskRunning() == -1)
         {
             lecpa_cmd = (LECPA_Drive_Command_t)p_lecpa_drive_task->sub_func;
-            Set_LECPA_100_DriveTask(lecpa_cmd);
+            if (lecpa_cmd == Drive_Move_AnyPoint)
+            {
+                memcpy(&s16_tmp1, &(p_lecpa_drive_task->position_cmd), sizeof(s16_tmp1));
+            }
+            else
+            {
+                s16_tmp1 = 0;
+            }
+            Set_LECPA_100_DriveTask(lecpa_cmd, s16_tmp1);
         }
         lecpa_drive_reply.cmd_id_rep = RespPositive_LECPA_100_Control;
         lecpa_drive_reply.sub_func = p_lecpa_drive_task->sub_func;
-        lecpa_drive_reply.drive_state = Get_LECPA_100_DriveState();
         lecpa_drive_reply.drive_state = Get_LECPA_100_DriveState();
         lecpa_drive_reply.argv_1 = Dummy_00;
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&lecpa_drive_reply, 4);
