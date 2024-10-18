@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <outcompare.h>
+#include "Timers.h"
 #include "RTC_Log.h"
 
 void OC2_SyncTmr3_Settings(enum Zrpm z_rpm);
@@ -18,6 +19,10 @@ static int z_rpm_idx = 0;
 // such that startup pwm after 1ms delay,
 // and update/off oc2 output after completed square waveform.
 static Z_Pulse_msg_update_t z_pulse_update_buffer = {0, 0, 0, {0, 0, 0, 0}};
+static Z_Pulse_filter_t z_pulse_filter = {-1,Zpfilter_Off};
+static UINT_32 u32_z_pulse_count = 0;
+static UINT_32 u32_z_cycle_count = 0;
+
 static X_Pulse_msg_update_t x_pulse_update_buffer = {0, 0, 0, 0, 0};
 static X_Pulse_Jump_Para_t x_pulse_jump_para;
 
@@ -145,45 +150,69 @@ void z_pulse_gen_lookup_table(enum Zrpm rpm_value)
         OC2_SyncTmr3_Settings(z_rpm_idx);
 }
 
+void z_pulse_counter_inc()
+{
+    usb_msg_z_pulse_gen_reply_t z_pulse_gen_reply;
+
+    // char log_msg[60];
+    u32_z_pulse_count += 1;
+    if (u32_z_pulse_count >= Z_SPR1600)
+    {
+        u32_z_pulse_count = 0;
+        u32_z_cycle_count += 1;
+
+        z_pulse_gen_reply.cmd_id_rep = RespPositive_Z_PulseGen;
+        z_pulse_gen_reply.sub_func = SubFunc_z_pulse_turns_reply;
+        z_pulse_gen_reply.turns = 0xffff & ((unsigned short)u32_z_cycle_count);
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&z_pulse_gen_reply, 4);
+        // snprintf(log_msg, 60, "z_cycle: %ld",u32_z_cycle_count);
+        // RTC_LogMsg(Debug_Lev, log_msg);
+    }
+}
+
 void __attribute__((interrupt, no_auto_psv)) _OC2Interrupt(void)
 {
     IFS0bits.OC2IF = 0;
-    if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
+    Z_Pulse_filter_t *pZPF = &z_pulse_filter;
+    if (pZPF->filter_ready_off == 1)
     {
-        z_pulse_update_buffer.z_pulse_update_turn_off = 0;
-        z_pulse_update_buffer.z_pulse_update_mutex = 0;
         z_pulse_gen_off();
+        pZPF->filter_ready_off = 0;
+        pZPF->filter_timer_on = 0;
+        z_pulse_update_buffer.z_pulse_update_turn_off = 0;
+        z_pulse_filter.z_pulse_filter_state = Zpfilter_Off;
+        u32_z_cycle_count = 0;
+        u32_z_pulse_count = 0;
+        return;
     }
-
-    if (z_pulse_update_buffer.z_pulse_update_mutex == 1)
-    {
-        z_pulse_update_buffer.z_pulse_update_mutex = 0;
-        z_pulse_gen_by_value(z_pulse_update_buffer.z_pulse_update.period_hiword,
-                             z_pulse_update_buffer.z_pulse_update.period_loword,
-                             z_pulse_update_buffer.z_pulse_update.dutyon_hiword,
-                             z_pulse_update_buffer.z_pulse_update.dutyon_loword);
-    }
+    z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
+                         pZPF->z_pulse_output.period_loword,
+                         pZPF->z_pulse_output.dutyon_hiword,
+                         pZPF->z_pulse_output.dutyon_loword);
+    z_pulse_counter_inc();
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void)
 {
     IFS0bits.T3IF = 0;
     TMR3 = 0;
-    if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
+    Z_Pulse_filter_t *pZPF = &z_pulse_filter;
+    if (pZPF->filter_ready_off == 1)
     {
-        z_pulse_update_buffer.z_pulse_update_turn_off = 0;
-        z_pulse_update_buffer.z_pulse_update_mutex = 0;
         z_pulse_gen_off();
+        pZPF->filter_ready_off = 0;
+        pZPF->filter_timer_on = 0;
+        z_pulse_update_buffer.z_pulse_update_turn_off = 0;
+        z_pulse_filter.z_pulse_filter_state = Zpfilter_Off;
+        u32_z_cycle_count = 0;
+        u32_z_pulse_count = 0;
+        return;
     }
-
-    if (z_pulse_update_buffer.z_pulse_update_mutex == 1)
-    {
-        z_pulse_update_buffer.z_pulse_update_mutex = 0;
-        z_pulse_gen_by_value(z_pulse_update_buffer.z_pulse_update.period_hiword,
-                             z_pulse_update_buffer.z_pulse_update.period_loword,
-                             z_pulse_update_buffer.z_pulse_update.dutyon_hiword,
-                             z_pulse_update_buffer.z_pulse_update.dutyon_loword);
-    }
+    z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
+                         pZPF->z_pulse_output.period_loword,
+                         pZPF->z_pulse_output.dutyon_hiword,
+                         pZPF->z_pulse_output.dutyon_loword);
+    z_pulse_counter_inc();
 }
 
 // date: 2024, 0926.
@@ -244,16 +273,26 @@ char z_pulse_off_by_usb_msg()
 
 char z_pulse_update_by_usb_msg(unsigned int w, unsigned int x, unsigned int y, unsigned int z)
 {
-    if (z_pulse_update_buffer.z_pulse_update_mutex == 1)
-        return -1;
-    z_pulse_update_buffer.z_pulse_update_mutex = 1;
-    z_pulse_update_buffer.z_pulse_update.period_hiword = w;
-    z_pulse_update_buffer.z_pulse_update.period_loword = x;
-    z_pulse_update_buffer.z_pulse_update.dutyon_hiword = y;
-    z_pulse_update_buffer.z_pulse_update.dutyon_loword = z;
+    // if (z_pulse_update_buffer.z_pulse_update_mutex == 1)
+    //     return -1;
+    // z_pulse_update_buffer.z_pulse_update_mutex = 1;
+    // z_pulse_update_buffer.z_pulse_update.period_hiword = w;
+    // z_pulse_update_buffer.z_pulse_update.period_loword = x;
+    // z_pulse_update_buffer.z_pulse_update.dutyon_hiword = y;
+    // z_pulse_update_buffer.z_pulse_update.dutyon_loword = z;
+
+    if (z_pulse_filter.z_pulse_filter_state==Zpfilter_Off)
+    {
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_Z_PULSE_FILTER, 50);
+        z_pulse_filter.z_pulse_filter_state = Zpfilter_Running;
+        z_pulse_filter.filter_timer_on = 1;
+    }
+    z_pulse_filter.z_pulse_input.period_hiword =w;
+    z_pulse_filter.z_pulse_input.period_loword =x;
     return 0;
 }
 
+// to be cancelled.
 char z_pulse_startup_by_tmr()
 {
     if (z_pulse_update_buffer.z_pulse_gen_enable == 1)
@@ -266,6 +305,155 @@ char z_pulse_startup_by_tmr()
                              z_pulse_update_buffer.z_pulse_update.dutyon_hiword,
                              z_pulse_update_buffer.z_pulse_update.dutyon_loword);
     }
+    return 0;
+}
+// #define C_period_dummy 0xffff 
+// #define Period_500RPM 45000
+// #define Z_SPR1600_600RPM 3750
+// #define Z_SPR1600_200RPM 11250
+// #define Z_SPR1600_5RPM 450000
+char Is_z_pulse_FilterTaskRunning()
+{
+    Z_Pulse_filter_t *pZPF = &z_pulse_filter;
+    if (pZPF->filter_timer_on == 1)
+        return 0;
+    else
+        return -1;
+}
+
+char z_pulse_FilterRountineTask()
+{
+    Z_Pulse_filter_t *pZPF = &z_pulse_filter;
+    OCx_pulse_count_type_t width_tmp1,width_tmp2;
+    char log_msg[60];
+    if (SysTimer_IsTimerExpiered(RTC_CONTROL_Z_PULSE_FILTER) == 0)
+        return 0;
+    width_tmp1.u16[1] = pZPF->z_pulse_input.period_hiword;
+    width_tmp1.u16[0] = pZPF->z_pulse_input.period_loword;
+
+    if (z_pulse_update_buffer.z_pulse_gen_enable == 0)
+    {
+
+        if (width_tmp1.u32 > Z_SPR1600_200RPM)
+        {
+            pZPF->z_pulse_output.period_hiword = width_tmp1.u16[1];
+            pZPF->z_pulse_output.period_loword = width_tmp1.u16[0];
+            width_tmp1.u32 >>= 1;
+            pZPF->z_pulse_output.dutyon_hiword = width_tmp1.u16[1];
+            pZPF->z_pulse_output.dutyon_loword = width_tmp1.u16[0];
+
+            pZPF->z_pulse_backup.period_hiword = width_tmp1.u16[1];
+            pZPF->z_pulse_backup.period_loword = width_tmp1.u16[0];
+
+            z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
+                                 pZPF->z_pulse_output.period_loword,
+                                 pZPF->z_pulse_output.dutyon_hiword,
+                                 pZPF->z_pulse_output.dutyon_loword);
+
+            // snprintf(log_msg, 60, "Ztask(1)- %d,%d,%d,%d,",
+            //          pZPF->z_pulse_output.period_hiword,
+            //          pZPF->z_pulse_output.period_loword,
+            //          pZPF->z_pulse_output.dutyon_hiword,
+            //          pZPF->z_pulse_output.dutyon_loword);
+            // RTC_LogMsg(Debug_Lev, log_msg);
+        }
+        else
+        {
+            width_tmp1.u32 = Z_SPR1600_200RPM;
+            pZPF->z_pulse_output.period_hiword = width_tmp1.u16[1];
+            pZPF->z_pulse_output.period_loword = width_tmp1.u16[0];
+            width_tmp1.u32 >>= 1;
+            pZPF->z_pulse_output.dutyon_hiword = width_tmp1.u16[1];
+            pZPF->z_pulse_output.dutyon_loword = width_tmp1.u16[0];
+            pZPF->z_pulse_backup.period_hiword = width_tmp1.u16[1];
+            pZPF->z_pulse_backup.period_loword = width_tmp1.u16[0];
+
+            z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
+                                 pZPF->z_pulse_output.period_loword,
+                                 pZPF->z_pulse_output.dutyon_hiword,
+                                 pZPF->z_pulse_output.dutyon_loword);
+            // snprintf(log_msg, 60, "Ztask(2)- %d,%d,%d,%d,",
+            //          pZPF->z_pulse_output.period_hiword,
+            //          pZPF->z_pulse_output.period_loword,
+            //          pZPF->z_pulse_output.dutyon_hiword,
+            //          pZPF->z_pulse_output.dutyon_loword);
+            // RTC_LogMsg(Debug_Lev, log_msg);
+        }
+    }
+    else
+    {
+        width_tmp2.u16[1] = pZPF->z_pulse_output.period_hiword;
+        width_tmp2.u16[0] = pZPF->z_pulse_output.period_loword;
+        
+        if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
+        {
+            width_tmp2.u32 += Z_SPR1600_DEACCEL;
+            if (width_tmp2.u32 > Z_SPR1600_200RPM)
+            {
+                pZPF->filter_ready_off = 1; 
+                snprintf(log_msg, 60, "Ztask(off)");
+                RTC_LogMsg(Debug_Lev, log_msg);
+            }
+            else
+            {
+                pZPF->filter_ready_off = 0;
+
+                pZPF->z_pulse_output.period_hiword = width_tmp2.u16[1];
+                pZPF->z_pulse_output.period_loword = width_tmp2.u16[0];
+                width_tmp2.u32 >>= 1;
+                pZPF->z_pulse_output.dutyon_hiword = width_tmp2.u16[1];
+                pZPF->z_pulse_output.dutyon_loword = width_tmp2.u16[0];
+                z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
+                                     pZPF->z_pulse_output.period_loword,
+                                     pZPF->z_pulse_output.dutyon_hiword,
+                                     pZPF->z_pulse_output.dutyon_loword);
+                // snprintf(log_msg, 60, "Ztask(prepare-off) %d,%d,%d,%d,",
+                //          pZPF->z_pulse_output.period_hiword,
+                //          pZPF->z_pulse_output.period_loword,
+                //          pZPF->z_pulse_output.dutyon_hiword,
+                //          pZPF->z_pulse_output.dutyon_loword);
+                // RTC_LogMsg(Debug_Lev, log_msg);
+            }
+        }
+        else
+        {
+            if (width_tmp1.u32 < width_tmp2.u32) // input higher than output
+            {
+                width_tmp2.u32 -= Z_SPR1600_ACCEL;
+                if (width_tmp2.u32 < width_tmp1.u32)
+                    width_tmp2.u32 = width_tmp1.u32;
+            }
+            else
+            {
+                width_tmp2.u32 += Z_SPR1600_DEACCEL;
+                if (width_tmp2.u32 > width_tmp1.u32)
+                    width_tmp2.u32 = width_tmp1.u32;
+                if ((width_tmp1.u32 > Z_SPR1600_200RPM) && (width_tmp2.u32 > Z_SPR1600_200RPM))
+                {
+                    width_tmp2.u32 = width_tmp1.u32;
+                }
+            }
+            pZPF->z_pulse_output.period_hiword =width_tmp2.u16[1];
+            pZPF->z_pulse_output.period_loword =width_tmp2.u16[0];
+            width_tmp2.u32 >>= 1;
+            pZPF->z_pulse_output.dutyon_hiword = width_tmp2.u16[1];
+            pZPF->z_pulse_output.dutyon_loword = width_tmp2.u16[0];
+            z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
+                                 pZPF->z_pulse_output.period_loword,
+                                 pZPF->z_pulse_output.dutyon_hiword,
+                                 pZPF->z_pulse_output.dutyon_loword);
+            // snprintf(log_msg, 60, "Ztask(3)- %d,%d,%d,%d,",
+            //          pZPF->z_pulse_output.period_hiword,
+            //          pZPF->z_pulse_output.period_loword,
+            //          pZPF->z_pulse_output.dutyon_hiword,
+            //          pZPF->z_pulse_output.dutyon_loword);
+            // RTC_LogMsg(Debug_Lev, log_msg);
+        }
+    }
+
+
+    if( z_pulse_filter.z_pulse_filter_state == Zpfilter_Running)
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_Z_PULSE_FILTER,50); 
     return 0;
 }
 

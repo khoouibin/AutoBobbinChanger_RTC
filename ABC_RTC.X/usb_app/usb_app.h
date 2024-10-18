@@ -70,6 +70,8 @@ enum Protocol_Dummy
 {
 	Dummy_00 = 0x00,
 	Dummy_ff = 0xff,
+	Dummy_0000 = 0x0000,
+	Dummy_ffff = 0xffff,
 };
 
 enum Echo_SubFunc
@@ -122,6 +124,7 @@ enum Z_PulseGen_SubFunc
 	SubFunc_z_pulse_gen_off = 0,
 	SubFunc_z_pulse_gen_rpm = 1,
 	SubFunc_z_pulse_gen_pwm = 2,
+	SubFunc_z_pulse_turns_reply = 11,
 	SubFunc_z_pulse_gen_max,
 };
 
@@ -327,8 +330,7 @@ typedef struct
 {
 	unsigned char cmd_id_rep;
 	unsigned char sub_func;
-	unsigned char argv_0;
-	unsigned char argv_1;
+	unsigned short turns;
 } usb_msg_z_pulse_gen_reply_t;
 
 typedef struct

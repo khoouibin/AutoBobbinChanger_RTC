@@ -70,7 +70,7 @@ RTC_Control_State_t RTC_Control_Main(void)
         if (BL_USB_Tx_1mISR_Get() == 1)
         {
             BL_USB_Tx_1mISR_Clr();
-            z_pulse_startup_by_tmr();
+            //z_pulse_startup_by_tmr();
             x_pulse_startup_by_tmr();
 
             // to send usb_data every 1ms if bus available.
@@ -124,6 +124,12 @@ RTC_Control_State_t RTC_Control_Main(void)
             LECPA_100_DriveRountineTask();
 
         }
+
+        if(Is_z_pulse_FilterTaskRunning() == 0)
+        {
+            z_pulse_FilterRountineTask();
+
+        }       
     }
     return control_state;
 }
@@ -459,8 +465,7 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
         }
         z_pulse_gen_reply.cmd_id_rep = RespPositive_Z_PulseGen;
         z_pulse_gen_reply.sub_func = p_z_pulse_gen_task->sub_func;
-        z_pulse_gen_reply.argv_0 = Dummy_00;
-        z_pulse_gen_reply.argv_1 = Dummy_00;
+        z_pulse_gen_reply.turns = Dummy_0000;
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&z_pulse_gen_reply, 4);
         break;
     case Action_PulseGen_X:

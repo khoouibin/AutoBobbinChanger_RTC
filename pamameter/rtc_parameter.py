@@ -129,14 +129,14 @@ def pulse_calculation(max_rpm,spr):
     iFcy = 60e6
     iMaxSpd = max_rpm
     iMaxSpd_period_count = int( (60/iMaxSpd/spr)*iFcy)
-    print('iMaxSpd_period_count:',iMaxSpd_period_count)
+    log = 'max prm:%d, period_cnt:%d'%(iMaxSpd,iMaxSpd_period_count)
+    print(log)
 
-    iAlpha = 2*math.pi  / spr
     f_accel = iMaxSpd/14
     f_accel = 5 if f_accel < 5 else f_accel
 
     c0_f_accel_pulse_count = int((60/f_accel/spr)*iFcy)
-    print('c0_faccel:',c0_f_accel_pulse_count)
+    print('pulse_cnt c0:',c0_f_accel_pulse_count)
     cn=[c0_f_accel_pulse_count]
     for n in range(1,400):
         cn_f_accel = cn[0]*( math.sqrt(n+1)-math.sqrt(n))
@@ -144,7 +144,8 @@ def pulse_calculation(max_rpm,spr):
         if cn_f_accel< iMaxSpd_period_count:
             cn[n]=iMaxSpd_period_count
             break
-    print(cn,len(cn))
+    log = 'cn:%s,---len:%d'%(cn,len(cn))
+    print(log)
     
     cm=[c0_f_accel_pulse_count]
     for m in range(1,400):
@@ -155,7 +156,8 @@ def pulse_calculation(max_rpm,spr):
         if cm_f_accel< iMaxSpd_period_count:
             cm[m]=iMaxSpd_period_count
             break
-    print(cm,len(cm))
+    log = 'cm:%s,---len:%d'%(cm,len(cm))
+    print(log)
 
     # rpm_cn_conv = []
     # for idx,k in enumerate(cn):
@@ -188,12 +190,206 @@ def pulse_calculation(max_rpm,spr):
     #     print('{:4.3f}rpm_s'.format(_rpm))
     # print('len(rpm_s):',len(rpm_s))
 
-    
+#   start_rpm = 100, end_rpm = 1000, 1600
+def pulse_calculation2(start_rpm,end_rpm,spr):  
+    iFcy = 60e6
+    end_rpm_period_cnt = int( (60/end_rpm/spr)*iFcy)
+    start_rpm_period_cnt = int( (60/start_rpm/spr)*iFcy)
+    log = 'end rpm:%d, period_cnt:%d'%(end_rpm,end_rpm_period_cnt)
+    print(log)
+    log = 'start rpm:%d, period_cnt:%d'%(start_rpm,start_rpm_period_cnt)
+    print(log)
+
+    f_accel = (end_rpm-start_rpm)/14
+    f_accel = 5 if f_accel < 5 else f_accel
+    c0_f_accel_pulse_count = int((60/(start_rpm+(f_accel)/32)/spr)*iFcy)
+    cn=[c0_f_accel_pulse_count]
+    for n in range(1,400):
+        cn_f_accel = cn[0]*( math.sqrt(n+1)-math.sqrt(n))
+        cn.append(int(cn_f_accel))
+        if cn_f_accel< end_rpm_period_cnt:
+            cn[n]=end_rpm_period_cnt
+            break
+    log = 'cn:%s,---len:%d'%(cn,len(cn))
+    print(log)
+
+    cm=[c0_f_accel_pulse_count]
+    for m in range(1,400):
+        cm_f_accel = cm[m-1] - ( 2* cm[m-1]/(4*m+1))
+        if m == 1:
+            cm_f_accel = cm_f_accel/1.448528938
+        cm.append(int(cm_f_accel))
+        if cm_f_accel< end_rpm_period_cnt:
+            cm[m]=end_rpm_period_cnt
+            break
+    log = 'cm:%s,---len:%d'%(cm,len(cm))
+    print(log)
+
+def pulse_calculation2_1(start_rpm,end_rpm,spr):  
+    iFcy = 60e6
+    end_rpm_period_cnt = int( (60/end_rpm/spr)*iFcy)
+    start_rpm_period_cnt = int( (60/start_rpm/spr)*iFcy)
+    log = 'end rpm:%d, period_cnt:%d'%(end_rpm,end_rpm_period_cnt)
+    print(log)
+    log = 'start rpm:%d, period_cnt:%d'%(start_rpm,start_rpm_period_cnt)
+    print(log)
+    c0_f_accel_pulse_count = int((60/(start_rpm)/spr)*iFcy)
+    c0_f_acc_pulse_count = int((60/(end_rpm_period_cnt)/spr)*iFcy)
+    cm=[c0_f_accel_pulse_count]
+    for m in range(1,400):
+        #cm_f_accel = cm[m-1] - ( 2* cm[m-1]/(4*m+1))
+        
+        # if m == 1:
+        #     cm_f_accel = cm_f_accel/1.448528938
+
+        cm_f_accel = cm[m-1]-c0_f_acc_pulse_count/8
+        cm.append(int(cm_f_accel))
+        if cm_f_accel< end_rpm_period_cnt:
+            cm[m]=end_rpm_period_cnt
+            break
+    log = 'cm:%s,---len:%d'%(cm,len(cm))
+    print(log)
+
+#   start_rpm = 100, end_rpm = 1000, 1600
+def pulse_calculation3(start_rpm,end_rpm,spr):  
+    iFcy = 60e6
+    end_rpm_period_cnt = int( (60/end_rpm/spr)*iFcy)
+    start_rpm_period_cnt = int( (60/start_rpm/spr)*iFcy)
+    log = 'end rpm:%d, period_cnt:%d'%(end_rpm,end_rpm_period_cnt)
+    print(log)
+    log = 'start rpm:%d, period_cnt:%d'%(start_rpm,start_rpm_period_cnt)
+    print(log)
+
+    f_accel = (end_rpm-start_rpm)/14
+    log = 'f_accel:%d'%(f_accel)
+    print(log)
+
+    #f_accel = 5 if f_accel < 5 else f_accel
+    log = 'f_accel:%d'%(f_accel)
+    print(log)
+
+    c0_f_accel_pulse_count = int((60/(start_rpm)/spr)*iFcy)
+    c0_eff_accel_pulse_count =  int((60/(0+(abs(f_accel)*32))/spr)*iFcy)
+    # log = 'f_eff_accel:%d'%(c0_eff_accel_pulse_count)
+    # print(log)
+    # cn=[c0_f_accel_pulse_count]
+    # for n in range(1,400):
+    #     cn_f_accel = cn[0]*( math.sqrt(n+1)-math.sqrt(n))
+    #     print(n,cn_f_accel)
+    #     cn_f_accel += c0_eff_accel_pulse_count
+    #     print(n,cn_f_accel)
+    #     cn.append(int(cn_f_accel))
+    #     if cn_f_accel > end_rpm_period_cnt:
+    #         cn[n]=end_rpm_period_cnt
+    #         break
+    # log = 'cn:%s,---len:%d'%(cn,len(cn))
+    # print(log)
+
+    cm=[c0_f_accel_pulse_count]
+    for m in range(1,400):
+        cm_f_accel = cm[m-1] - ( 2* cm[m-1]/(4*m+1))
+        cm_f_accel+=cm[0]
+        if m == 1:
+            cm_f_accel = cm_f_accel/1.448528938
+        cm.append(int(cm_f_accel))
+        if cm_f_accel> end_rpm_period_cnt:
+            cm[m]=end_rpm_period_cnt
+            break
+    log = 'cm:%s,---len:%d'%(cm,len(cm))
+    print(log)
+
+def pulse_calculation2_2(start_rpm,end_rpm,spr):  
+    iFcy = 60e6
+
+    #f_accel = 5 if f_accel < 5 else f_accel
+    s_rpm = 5 if start_rpm < 5 else start_rpm
+    e_rpm = 5 if end_rpm <5 else end_rpm
+
+    end_rpm_period_cnt = int( (60/e_rpm/spr)*iFcy)
+    start_rpm_period_cnt = int( (60/s_rpm/spr)*iFcy)
+    log = 'e_rpm:%d p_cnt:%d, s_rpm:%d p_cnt:%d'\
+        %(e_rpm,end_rpm_period_cnt,s_rpm,start_rpm_period_cnt)
+    print(log)
+
+    c0_f_accel_pulse_count = int((60/(s_rpm)/spr)*iFcy)
+    c0_f_acc_pulse_count = int((60/(end_rpm_period_cnt)/spr)*iFcy)
+    cm=[c0_f_accel_pulse_count]
+    for m in range(1,400):
+        cm_f_accel = cm[m-1]-c0_f_acc_pulse_count/8
+        cm.append(int(cm_f_accel))
+
+        if e_rpm > s_rpm:
+            if cm_f_accel< end_rpm_period_cnt:
+                cm[m]=end_rpm_period_cnt
+                break
+        else:
+            if cm_f_accel> end_rpm_period_cnt:
+                cm[m]=end_rpm_period_cnt
+                break
+    log = 'cm:%s,---len:%d'%(cm,len(cm))
+    print(log)
 
 
+def pulse_calculation4(start_rpm,end_rpm,spr):  
+    iFcy = 60e6
+    s_rpm = 5 if start_rpm < 5 else start_rpm
+    e_rpm = 5 if end_rpm <5 else end_rpm
 
+    if s_rpm < e_rpm:
+        print('------------------1')
+        e_rpm_percnt = int( (60/e_rpm/spr)*iFcy)
+        s_rpm_percnt = int( (60/s_rpm/spr)*iFcy)
+        log = 'end-rpm:%d, period_cnt:%d'%(e_rpm,e_rpm_percnt)
+        print(log)
+        log = 'start-rpm:%d, period_cnt:%d'%(s_rpm,s_rpm_percnt)
+        print(log)
 
+        c0_accel = int((60/(s_rpm)/spr)*iFcy)
+        c0_inc = int((60/(e_rpm_percnt)/spr)*iFcy)
+        cm=[c0_accel]
+        for m in range(1,16000):
+            cm_f_accel = cm[m-1]- (2* cm[m-1]/(4*m+1))
+            cm.append(int(cm_f_accel))
+            if cm_f_accel < e_rpm_percnt:
+                cm[m] = e_rpm_percnt
+                break
+        log = 'cm:%s,---len:%d'%(cm,len(cm))
+        print(log)
+
+    else:
+        print('------------------2')
+
+        e_rpm_percnt = int( (60/e_rpm/spr)*iFcy)
+        s_rpm_percnt = int( (60/s_rpm/spr)*iFcy)
+        log = 'end-rpm:%d, period_cnt:%d'%(e_rpm,e_rpm_percnt)
+        print(log)
+        log = 'start-rpm:%d, period_cnt:%d'%(s_rpm,s_rpm_percnt)
+        print(log)
+
+        f_accel = (e_rpm-s_rpm)/14
+        log = 'f_accel:%d'%(f_accel)
+        print(log)
+        c0_deaccel = int((60/(s_rpm)/spr)*iFcy)
+        cm=[c0_deaccel]
+        for m in range(1,16000):
+            #cm_f_accel = cm[m-1] - ( 2* cm[m-1]/(4*m+1))
+            cm_f_accel = cm[m-1] - ( 2* cm[m-1]/(4*m+1))
+            cm_f_accel+=cm[0]
+            # if m == 1:
+            #     cm_f_accel = cm_f_accel/1.448528938
+            cm.append(int(cm_f_accel))
+            if cm_f_accel> e_rpm_percnt:
+                cm[m]=e_rpm_percnt
+                break
+        log = 'cm:%s,---len:%d'%(cm,len(cm))
+        print(log)
 
 if __name__ == '__main__':
     #main()
-    pulse_calculation(123,1600)
+    #pulse_calculation(3000,1600)
+    pulse_calculation2(200,600,1600)
+    #pulse_calculation2_1(100,3000,1600)
+    #pulse_calculation3(3000,10,1600)
+    #pulse_calculation3(500,100,1600)
+
+    #pulse_calculation4(5,600,1600) 

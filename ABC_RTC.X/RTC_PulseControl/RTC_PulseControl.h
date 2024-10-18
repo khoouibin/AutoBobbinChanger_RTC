@@ -1,6 +1,15 @@
 #ifndef _RTC_PulseControl_H_
 #define _RTC_PulseControl_H_
 #include "Ons_General.h"
+
+#define C_period_dummy 0xffff 
+#define Period_500RPM 45000
+#define Z_SPR1600_600RPM 3750
+#define Z_SPR1600_200RPM 11250
+#define Z_SPR1600_5RPM 450000
+#define Z_SPR1600_ACCEL 600
+#define Z_SPR1600_DEACCEL 400
+#define Z_SPR1600 1600-1
 #define NOP20_MACRO() \
     {                 \
         asm("NOP");   \
@@ -236,6 +245,22 @@ typedef struct
     z_pulse_width_modulation_t z_pulse_update;
 } Z_Pulse_msg_update_t;
 
+typedef enum
+{
+    Zpfilter_Off,
+    Zpfilter_Running,
+} z_pulse_filter_state_t;
+
+typedef struct
+{
+    char filter_timer_on;
+    char filter_ready_off;
+    z_pulse_filter_state_t z_pulse_filter_state;
+    z_pulse_width_modulation_t z_pulse_input;
+    z_pulse_width_modulation_t z_pulse_output;
+    z_pulse_width_modulation_t z_pulse_backup;
+} Z_Pulse_filter_t;
+
 typedef struct
 {
     unsigned short z_rpm_value;
@@ -294,6 +319,9 @@ void z_pulse_gen_lookup_table(enum Zrpm rpm_value);
 char z_pulse_off_by_usb_msg();
 char z_pulse_update_by_usb_msg(unsigned int w,unsigned int x,unsigned int y,unsigned int z);
 char z_pulse_startup_by_tmr();
+
+char Is_z_pulse_FilterTaskRunning();
+char z_pulse_FilterRountineTask();
 
 void x_pulse_settings(OCx_sequence_t x_pwm);
 char OCx_CountDelay_Calculation(OCx_src_t *cn_ref, OCx_sequence_t *cn_seqence, int cn_seq_size, int *cn_seq_idx);
