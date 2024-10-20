@@ -127,8 +127,8 @@ RTC_Control_State_t RTC_Control_Main(void)
 
         if(Is_z_pulse_FilterTaskRunning() == 0)
         {
-            z_pulse_FilterRountineTask();
-
+            //z_pulse_FilterRountineTask();
+            z_pulse_MA_RountineTask();
         }       
     }
     return control_state;

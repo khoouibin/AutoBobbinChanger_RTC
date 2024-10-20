@@ -6,6 +6,8 @@
 #define Period_500RPM 45000
 #define Z_SPR1600_600RPM 3750
 #define Z_SPR1600_200RPM 11250
+#define Z_SPR1600_180RPM 12500
+#define Z_SPR1600_50RPM 45000
 #define Z_SPR1600_5RPM 450000
 #define Z_SPR1600_ACCEL 600
 #define Z_SPR1600_DEACCEL 400
@@ -247,19 +249,38 @@ typedef struct
 
 typedef enum
 {
-    Zpfilter_Off,
-    Zpfilter_Running,
-} z_pulse_filter_state_t;
+    FilterOff,
+    FirstRunning,
+    ContinueRunning,
+} filter_state_t;
 
 typedef struct
 {
-    char filter_timer_on;
     char filter_ready_off;
-    z_pulse_filter_state_t z_pulse_filter_state;
+    //z_pulse_filter_state_t z_pulse_filter_state;
     z_pulse_width_modulation_t z_pulse_input;
     z_pulse_width_modulation_t z_pulse_output;
     z_pulse_width_modulation_t z_pulse_backup;
 } Z_Pulse_filter_t;
+
+typedef union
+{
+	UINT_32 u32;
+	UINT_16 u16[2];
+    UCHAR_8 u8[4];
+}
+u32_union_t;
+
+typedef struct
+{
+    filter_state_t state;
+    u32_union_t ma_buf[64];
+    u32_union_t ma_input;  
+    u32_union_t ma_output;    
+    long long ma_bulk;    
+    unsigned int ma_idx;
+    char enable_off;
+} Z_Pulse_MA_t;
 
 typedef struct
 {
@@ -319,9 +340,11 @@ void z_pulse_gen_lookup_table(enum Zrpm rpm_value);
 char z_pulse_off_by_usb_msg();
 char z_pulse_update_by_usb_msg(unsigned int w,unsigned int x,unsigned int y,unsigned int z);
 char z_pulse_startup_by_tmr();
-
+void z_pulse_ma_init();
+void z_pulse_ma_debug();
 char Is_z_pulse_FilterTaskRunning();
-char z_pulse_FilterRountineTask();
+//char z_pulse_FilterRountineTask();
+char z_pulse_MA_RountineTask();
 
 void x_pulse_settings(OCx_sequence_t x_pwm);
 char OCx_CountDelay_Calculation(OCx_src_t *cn_ref, OCx_sequence_t *cn_seqence, int cn_seq_size, int *cn_seq_idx);

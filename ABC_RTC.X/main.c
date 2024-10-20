@@ -19,6 +19,7 @@
 #include "usb_app.h"
 #include "RTC_PulseControl.h"
 #include "RTC_LECPA_Control.h"
+#include "xc.h"
 /** CONFIGURATION **************************************************/
 // 150729 add Macros for Configuration Fuse Registers as below
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -113,6 +114,7 @@ int uart2RX_flag = 0;
 int main(void)
 {
     RTC_Control_State_t Is_Exit_RTC_Control = RTC_CONTROL_STATE_UNDEFINE;
+    z_pulse_ma_init();
     Initialize_System();
     Initialize_Communication_Modules();
     Set_LECPA_100_Init();
