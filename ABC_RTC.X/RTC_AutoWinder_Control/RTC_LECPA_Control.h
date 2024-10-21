@@ -61,6 +61,7 @@ typedef enum
 
 typedef enum
 {
+    DriStage_Null = -1,
     DriStage_Init = 0,
     DriStage_SetDir=1,
     DriStage_SetPulse=2,
@@ -127,6 +128,9 @@ typedef struct
 // any : -7500 <= any <= 7499
 typedef struct
 {
+    unsigned long wait_BUSY_ON_polling_ms;
+    unsigned long wait_BUSY_OFF_polling_ms;
+    unsigned long wait_task_start_polling_ms;
     unsigned long drive_task_polling_ms;
     signed short shift_pos; // shift position = 7500
     signed short max_point;
