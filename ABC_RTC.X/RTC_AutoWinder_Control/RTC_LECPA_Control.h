@@ -61,10 +61,13 @@ typedef enum
 
 typedef enum
 {
-    DriveBUSY_notSTART = 0,
-    DriveBUSY_On = 1,
-    DriveBUSY_Off = 2,
-} LECPA_DriveBUSY_State_t;
+    DriStage_Init = 0,
+    DriStage_SetDir=1,
+    DriStage_SetPulse=2,
+    DriStage_waitBUSY_On=3,
+    DriStage_waitBUSY_Off=4,
+    DriStage_Complete=5,
+} LECPA_Drive_Stage_t;
 
 typedef enum
 {
@@ -136,10 +139,11 @@ typedef struct
     char home_successful; // if servo-off, home_successful set -1.
     signed short LECPA_inner_position;
     signed short LECPA_inner_command;
+    signed short LECPA_inner_posdiff;
     signed short position_cmd; // position_cmd should between max_point and min_point.
     LECPA_ServoDef_t servo_status;
     LECPA_Drive_State_t drive_state;
-    LECPA_DriveBUSY_State_t busy_state;
+    LECPA_Drive_Stage_t drive_stage;
     LECPA_Drive_Command_t drive_command;
 } LECPA_Drive_Status_t;
 
@@ -155,8 +159,7 @@ char Set_LECPA_100_HomeAbort();
 char LECPA_100_HomeRountineTask();
 
 char Get_LECPA_100_DriveState();
-char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd, int any_point_value);
-
+char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd, signed short val);
 char Is_LECPA_100_DriveTaskRunning();
 char LECPA_100_DriveRountineTask();
 #endif

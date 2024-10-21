@@ -1,7 +1,6 @@
 #include "RTC_Control.h"
 #include "xc.h"
 #include "Timers.h"
-#include "RTC_IOports.h"
 #include "IO_Control.h"
 #include "IO_Entity.h"
 #include "usb_app.h"
@@ -29,7 +28,7 @@ void RTC_Control_Wink_Entity_Debug(char *flag, unsigned long delay_time, int ent
 RTC_Control_State_t Get_RTC_Control_State()
 {
     return control_state;
-} 
+}
 
 RTC_Control_State_t RTC_Control_Main(void)
 {
@@ -70,7 +69,7 @@ RTC_Control_State_t RTC_Control_Main(void)
         if (BL_USB_Tx_1mISR_Get() == 1)
         {
             BL_USB_Tx_1mISR_Clr();
-            //z_pulse_startup_by_tmr();
+            // z_pulse_startup_by_tmr();
             x_pulse_startup_by_tmr();
 
             // to send usb_data every 1ms if bus available.
@@ -114,22 +113,21 @@ RTC_Control_State_t RTC_Control_Main(void)
             }
         }
 
-        if(Get_LECPA_100_HomeRoutine()>0)
+        if (Get_LECPA_100_HomeRoutine() > 0)
         {
             LECPA_100_HomeRountineTask();
         }
 
-        if(Is_LECPA_100_DriveTaskRunning() == 0)
+        if (Is_LECPA_100_DriveTaskRunning() == 0)
         {
             LECPA_100_DriveRountineTask();
-
         }
 
-        if(Is_z_pulse_FilterTaskRunning() == 0)
+        if (Is_z_pulse_FilterTaskRunning() == 0)
         {
-            //z_pulse_FilterRountineTask();
+            // z_pulse_FilterRountineTask();
             z_pulse_MA_RountineTask();
-        }       
+        }
     }
     return control_state;
 }
@@ -351,7 +349,7 @@ void RTC_Control_Handler_Uninit(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_ms
     usb_msg_control_mode_switch_t *p_mode_switch_task = (usb_msg_control_mode_switch_t *)task_msg;
     usb_msg_control_mode_switch_reply_t mode_switch_reply;
 
-    //RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Uninit_ms, IO_ZA2_PISTON_ENTITY);
+    // RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Uninit_ms, IO_ZA2_PISTON_ENTITY);
 
     switch (cmd)
     {
@@ -439,9 +437,8 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
     OCx_src_t ocx_scr;
 
     static char led_wink_status = -1;
-    LECPA_Drive_Command_t lecpa_cmd=Drive_Command_Null;
-    //RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Ready_ms, IO_ZA2_PISTON_ENTITY);
-
+    LECPA_Drive_Command_t lecpa_cmd = Drive_Command_Null;
+    // RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Ready_ms, IO_ZA2_PISTON_ENTITY);
 
     switch (cmd)
     {
@@ -493,13 +490,11 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
         if (Is_LECPA_100_DriveTaskRunning() == -1)
         {
             lecpa_cmd = (LECPA_Drive_Command_t)p_lecpa_drive_task->sub_func;
+            // s16_tmp1 = (lecpa_cmd == Drive_Move_AnyPoint) ? memcpy(&s16_tmp1, &(p_lecpa_drive_task->position_cmd), sizeof(s16_tmp1)) : 0;
+            s16_tmp1 = 0;
             if (lecpa_cmd == Drive_Move_AnyPoint)
             {
                 memcpy(&s16_tmp1, &(p_lecpa_drive_task->position_cmd), sizeof(s16_tmp1));
-            }
-            else
-            {
-                s16_tmp1 = 0;
             }
             Set_LECPA_100_DriveTask(lecpa_cmd, s16_tmp1);
         }
@@ -571,7 +566,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
 
     char log_msg[60];
     static char led_wink_status = -1;
-    //RTC_Control_Wink_Entity_Debug(&led_wink_status, C_RTC_CONTROL_WINK_Home_ms, IO_ZA2_PISTON_ENTITY);
+    // RTC_Control_Wink_Entity_Debug(&led_wink_status, C_RTC_CONTROL_WINK_Home_ms, IO_ZA2_PISTON_ENTITY);
 
     switch (cmd)
     {
@@ -674,7 +669,7 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
         }
         else if (p_home_parts_task->sub_func == SubFunc_home_LECPA_100)
         {
-            if(p_home_parts_task->sub_cmd == SubCmd_Start)
+            if (p_home_parts_task->sub_cmd == SubCmd_Start)
             {
 
                 if (Is_LECPA_100_HomeRoutine_Idle() == 0)
@@ -682,17 +677,16 @@ void RTC_Control_Handler_Home(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
                     Set_LECPA_100_HomeStart();
                 }
             }
-            else if(p_home_parts_task->sub_cmd == SubCmd_Abort)
+            else if (p_home_parts_task->sub_cmd == SubCmd_Abort)
             {
                 Set_LECPA_100_HomeAbort();
             }
             home_parts_reply.home_routine = Get_LECPA_100_HomeRoutine();
             home_parts_reply.home_state = Get_LECPA_100_HomeState();
-
         }
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&home_parts_reply, 4);
         break;
-    }    
+    }
 }
 
 void RTC_Control_Handler_Diagnosis(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg)
@@ -701,8 +695,8 @@ void RTC_Control_Handler_Diagnosis(CommonMsg_Actions_t cmd, USB_Task_msg_t *task
     usb_msg_control_mode_switch_reply_t mode_switch_reply;
     static char led_wink_status = -1;
     char log_msg[60];
-    
-    //RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Diagnosis_ms, IO_ZA2_PISTON_ENTITY);
+
+    // RTC_Control_Wink_Entity_Debug(&led_wink_status,C_RTC_CONTROL_WINK_Diagnosis_ms, IO_ZA2_PISTON_ENTITY);
 
     switch (cmd)
     {

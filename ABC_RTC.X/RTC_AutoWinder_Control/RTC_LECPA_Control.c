@@ -2,7 +2,6 @@
 #include "xc.h"
 #include "usb_app.h"
 #include "Compiler.h"
-#include "RTC_IOports.h"
 #include "IO_Control.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -10,25 +9,27 @@
 #include "Timers.h"
 #include "RTC_Log.h"
 
-LECPA_HomeTask_Vars_t LECAP_100_HomeTaskVars={10,1,8,1};//unit: sec
-LECPA_Home_Parameters_t LECAP_100_HomeParas={50};
-LECPA_Home_Status_t LECAP_100_HomeStatus = {-1,0,0,0,0,Routine_Idle,HomeState_Idle};
+LECPA_HomeTask_Vars_t LECAP_100_HomeTaskVars = {10, 1, 8, 1}; // unit: sec
+LECPA_Home_Parameters_t LECAP_100_HomeParas = {50};
+LECPA_Home_Status_t LECAP_100_HomeStatus = {-1, 0, 0, 0, 0, Routine_Idle, HomeState_Idle};
 
-LECPA_Drive_Parameters_t LECAP_100_DriveParas= {50,0,0,0,0};
-LECPA_Drive_Status_t LECAP_100_DriveStatus = {-1,0,0,SERVO_OFF,Drive_NotReady,Drive_Command_Null};
+LECPA_Drive_Parameters_t LECAP_100_DriveParas = {50, 0, 0, 0, 0};
+LECPA_Drive_Status_t LECAP_100_DriveStatus;
 
-LECPA_Home_Parameters_t LECAP_101_Parameters={100,25,0};
-LECPA_Home_Status_t LECAP_101_HomeStatus= {-1,0,Routine_Idle,HomeState_Idle};
+LECPA_Home_Parameters_t LECAP_101_Parameters = {100, 25, 0};
+LECPA_Home_Status_t LECAP_101_HomeStatus = {-1, 0, Routine_Idle, HomeState_Idle};
 
 char Set_LECPA_100_Init()
 {
     LECAP_100_DriveStatus.home_successful = -1;
     LECAP_100_DriveStatus.LECPA_inner_position = -1;
+    LECAP_100_DriveStatus.LECPA_inner_command = -1;
+    LECAP_100_DriveStatus.LECPA_inner_posdiff = -1;
     LECAP_100_DriveStatus.position_cmd = -1;
     LECAP_100_DriveStatus.servo_status = SERVO_OFF;
     LECAP_100_DriveStatus.drive_state = Drive_NotReady;
     LECAP_100_DriveStatus.drive_command = Drive_Command_Null;
-    LECAP_100_DriveStatus.busy_state = DriveBUSY_notSTART;
+    LECAP_100_DriveStatus.drive_stage = DriStage_Init;
 
     LECAP_100_DriveParas.drive_task_polling_ms = 50;
     LECAP_100_DriveParas.shift_pos = 7500;
@@ -60,15 +61,15 @@ char Set_LECPA_100_HomeStart()
     LECAP_100_HomeStatus.home_routine = Routine_TaskStart;
     LECAP_100_HomeStatus.home_state = HomeState_Start;
     LECAP_100_HomeStatus.prepare_abort = 0;
-    LECAP_100_HomeStatus.l32_home_task_timeout_cnt = 0;    
+    LECAP_100_HomeStatus.l32_home_task_timeout_cnt = 0;
     LECAP_100_HomeStatus.l32_INPUTS_polling_cnt = 0;
     LECAP_100_HomeStatus.l32_BUSYOff_polling_cnt = 0;
     LECAP_100_HomeStatus.l32_SETON_polling_cnt = 0;
-    
+
     LECAP_100_HomeParas.Wait_TIMEOUT_HomeTask = (unsigned long)LECAP_100_HomeTaskVars.u16_home_task_timeout_sec * 1000 / LECAP_100_HomeParas.home_task_polling_ms;
-    LECAP_100_HomeParas.Wait_INPUTs_HomeTask = (unsigned long)LECAP_100_HomeTaskVars.u16_home_task_inputs_sec * 1000/LECAP_100_HomeParas.home_task_polling_ms;
-    LECAP_100_HomeParas.Wait_BUSYOff_HomeTask = (unsigned long)LECAP_100_HomeTaskVars.u16_home_task_busy_off_sec* 1000/LECAP_100_HomeParas.home_task_polling_ms;
-    LECAP_100_HomeParas.Wait_SETON_HomeTask =(unsigned long)LECAP_100_HomeTaskVars.u16_home_task_seton_sec* 1000/LECAP_100_HomeParas.home_task_polling_ms;
+    LECAP_100_HomeParas.Wait_INPUTs_HomeTask = (unsigned long)LECAP_100_HomeTaskVars.u16_home_task_inputs_sec * 1000 / LECAP_100_HomeParas.home_task_polling_ms;
+    LECAP_100_HomeParas.Wait_BUSYOff_HomeTask = (unsigned long)LECAP_100_HomeTaskVars.u16_home_task_busy_off_sec * 1000 / LECAP_100_HomeParas.home_task_polling_ms;
+    LECAP_100_HomeParas.Wait_SETON_HomeTask = (unsigned long)LECAP_100_HomeTaskVars.u16_home_task_seton_sec * 1000 / LECAP_100_HomeParas.home_task_polling_ms;
 
     IO_Entity_Mgr_Set_Entity(OUTPUT_RESET_CLRALARM_PIN8, 0);
     IO_Entity_Mgr_Set_Entity(OUTPUT_SVON_SERVO_ON_PIN9, 0);
@@ -97,8 +98,8 @@ char LECPA_100_HomeRountineTask()
     char s8_entity_value;
     usb_msg_home_parts_reply_t home_rountine_reply;
     LECPA_Home_Status_t *pLECPA100_Hstatus = &LECAP_100_HomeStatus;
-    LECPA_Drive_Status_t *pLECAP_100_DStatus =&LECAP_100_DriveStatus;
-    
+    LECPA_Drive_Status_t *pLECAP_100_DStatus = &LECAP_100_DriveStatus;
+
     home_rountine_reply.cmd_id_rep = RespPositive_HomeParts;
     home_rountine_reply.sub_func = SubFunc_home_LECPA_100_polling_reply;
     if (SysTimer_IsTimerExpiered(RTC_CONTROL_LECPA_100_HOME_POLLING) == 0)
@@ -336,13 +337,45 @@ void Convert_LECPA_Drive_PositionCmd(int poscmd, int *ret_dir, int *ret_poscmd, 
     *ret_inner_cmd = cmd_tmp;
 }
 
-char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd, int any_point_value)
+void Set_X_OCX_400rpm(OCx_src_t *val)
+{
+    OCx_src_t ocx;
+    ocx.cx[0].period.u32 = 78750;
+    ocx.cx[0].dutyon.u32 = 39375;
+    ocx.cx[1].period.u32 = 32619;
+    ocx.cx[1].dutyon.u32 = 16309;
+    ocx.cx_last.period.u32 = 5625;
+    ocx.cx_last.dutyon.u32 = 2812;
+    *val = ocx;
+}
+void Set_X_OCX_1000rpm(OCx_src_t *val)
+{
+    OCx_src_t ocx;
+    ocx.cx[0].period.u32 = 31500;
+    ocx.cx[0].dutyon.u32 = 15750;
+    ocx.cx[1].period.u32 = 13047;
+    ocx.cx[1].dutyon.u32 = 6523;
+    ocx.cx_last.period.u32 = 2250;
+    ocx.cx_last.dutyon.u32 = 1125;
+    *val = ocx;
+}
+void Set_X_OCX_3000rpm(OCx_src_t *val)
+{
+    OCx_src_t ocx;
+    ocx.cx[0].period.u32 = 10500;
+    ocx.cx[0].dutyon.u32 = 5250;
+    ocx.cx[1].period.u32 = 4349;
+    ocx.cx[1].dutyon.u32 = 2714;
+    ocx.cx_last.period.u32 = 750;
+    ocx.cx_last.dutyon.u32 = 375;
+    *val = ocx;
+}
+
+char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd, signed short any_point_value)
 {
     LECPA_Drive_Status_t *pLECAP_100_DStatus = &LECAP_100_DriveStatus;
     LECPA_Drive_Parameters_t *pLECAP_100_DParas = &LECAP_100_DriveParas;
-    int poscmd,inner_cmd;
-    int driv_dir,driv_poscmd;
-    OCx_src_t ocx_scr;
+
     char log_msg[60];
     if (pLECAP_100_DStatus->drive_state != Drive_Ready)
         return -1;
@@ -367,117 +400,47 @@ char Set_LECPA_100_DriveTask(LECPA_Drive_Command_t cmd, int any_point_value)
         if (pLECAP_100_DStatus->home_successful == -1)
             break;
         pLECAP_100_DStatus->position_cmd = pLECAP_100_DParas->org_point;
-        memcpy(&poscmd, &(pLECAP_100_DStatus->position_cmd), sizeof(poscmd));
-        Convert_LECPA_Drive_PositionCmd(poscmd, &driv_dir, &driv_poscmd, &inner_cmd);
-        memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(inner_cmd), sizeof(inner_cmd));
-        if (driv_poscmd == 0)
-            break;
-        // //400rpm
-        ocx_scr.cx[0].period.u32 = 78750;
-        ocx_scr.cx[0].dutyon.u32 = 39375;
-        ocx_scr.cx[1].period.u32 = 32619;
-        ocx_scr.cx[1].dutyon.u32 = 16309;
-        ocx_scr.cx_last.period.u32 = 5625;
-        ocx_scr.cx_last.dutyon.u32 = 2812;
-        IO_Entity_Mgr_Set_Entity(IO_X_DIRECTION_ENTITY, driv_dir);
-        x_pulse_update_by_usb_msg(&ocx_scr, driv_poscmd);
         pLECAP_100_DStatus->drive_command = Drive_Move_OrgPoint;
         pLECAP_100_DStatus->drive_state = Drive_Moving_OrgPoint;
-        pLECAP_100_DStatus->busy_state = DriveBUSY_notSTART;
+        pLECAP_100_DStatus->drive_stage = DriStage_Init;
         break;
 
     case Drive_Move_MinPoint:
         if (pLECAP_100_DStatus->home_successful == -1)
             break;
         pLECAP_100_DStatus->position_cmd = pLECAP_100_DParas->min_point;
-        memcpy(&poscmd, &(pLECAP_100_DStatus->position_cmd), sizeof(poscmd));
-        Convert_LECPA_Drive_PositionCmd(poscmd, &driv_dir, &driv_poscmd,&inner_cmd);
-        snprintf(log_msg, 60, "MovMin driv_dir=%d,driv_poscmd:%d",driv_dir,driv_poscmd);
-        RTC_LogMsg(Debug_Lev, log_msg);
-
-        memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(inner_cmd), sizeof(inner_cmd));
-
-        if (driv_poscmd == 0)
-            break;
-
-        // //400rpm
-        // ocx_scr.cx[0].period.u32=78750;
-        // ocx_scr.cx[0].dutyon.u32=39375;
-        // ocx_scr.cx[1].period.u32=32619;
-        // ocx_scr.cx[1].dutyon.u32=16309;
-        // ocx_scr.cx_last.period.u32 = 5625;
-        // ocx_scr.cx_last.dutyon.u32 = 2812;
-
-        //1000rpm
-        ocx_scr.cx[0].period.u32=31500;
-        ocx_scr.cx[0].dutyon.u32=15750;
-        ocx_scr.cx[1].period.u32=13047;
-        ocx_scr.cx[1].dutyon.u32=6523;
-        ocx_scr.cx_last.period.u32 = 2250;
-        ocx_scr.cx_last.dutyon.u32 = 1125;
-
-        IO_Entity_Mgr_Set_Entity(IO_X_DIRECTION_ENTITY, driv_dir);
-        x_pulse_update_by_usb_msg(&ocx_scr, driv_poscmd);
-
         pLECAP_100_DStatus->drive_command = Drive_Move_MinPoint;
         pLECAP_100_DStatus->drive_state = Drive_Moving_MinPoint;
-        pLECAP_100_DStatus->busy_state = DriveBUSY_notSTART;
+        pLECAP_100_DStatus->drive_stage = DriStage_Init;
         break;
 
     case Drive_Move_MaxPoint:
         if (pLECAP_100_DStatus->home_successful == -1)
             break;
         pLECAP_100_DStatus->position_cmd = pLECAP_100_DParas->max_point;
-        memcpy(&poscmd, &(pLECAP_100_DStatus->position_cmd), sizeof(poscmd));
-        Convert_LECPA_Drive_PositionCmd(poscmd, &driv_dir, &driv_poscmd,&inner_cmd);
-        snprintf(log_msg, 60, "MovMax driv_dir=%d,driv_poscmd:%d",driv_dir,driv_poscmd);
-        RTC_LogMsg(Debug_Lev, log_msg);
-
-        memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(inner_cmd), sizeof(inner_cmd));
-
-
-        if (driv_poscmd == 0)
-            break;
-//cx[0].period=78750, cx[1].period=32619, cx_last.period=5625
-        // ocx_scr.cx[0].period.u32=315000;
-        // ocx_scr.cx[0].dutyon.u32=157500;
-        // ocx_scr.cx[1].period.u32=130477;
-        // ocx_scr.cx[1].dutyon.u32=65238;
-        // ocx_scr.cx_last.period.u32 = 22500;
-        // ocx_scr.cx_last.dutyon.u32 = 11250;
-
-        // //400rpm
-        // ocx_scr.cx[0].period.u32=78750;
-        // ocx_scr.cx[0].dutyon.u32=39375;
-        // ocx_scr.cx[1].period.u32=32619;
-        // ocx_scr.cx[1].dutyon.u32=16309;
-        // ocx_scr.cx_last.period.u32 = 5625;
-        // ocx_scr.cx_last.dutyon.u32 = 2812;
-        //3000rpm
-        ocx_scr.cx[0].period.u32=10500;
-        ocx_scr.cx[0].dutyon.u32=5250;
-        ocx_scr.cx[1].period.u32=4349;
-        ocx_scr.cx[1].dutyon.u32=2714;
-        ocx_scr.cx_last.period.u32 = 750;
-        ocx_scr.cx_last.dutyon.u32 = 375;
-        IO_Entity_Mgr_Set_Entity(IO_X_DIRECTION_ENTITY, driv_dir);
-        x_pulse_update_by_usb_msg(&ocx_scr, driv_poscmd);
-
         pLECAP_100_DStatus->drive_command = Drive_Move_MaxPoint;
         pLECAP_100_DStatus->drive_state = Drive_Moving_MaxPoint;
-        pLECAP_100_DStatus->busy_state = DriveBUSY_notSTART;
+        pLECAP_100_DStatus->drive_stage = DriStage_Init;
         break;
 
     case Drive_Move_AnyPoint:
         if (pLECAP_100_DStatus->home_successful == -1)
             break;
+        pLECAP_100_DStatus->position_cmd = any_point_value;
         pLECAP_100_DStatus->drive_command = Drive_Move_AnyPoint;
         pLECAP_100_DStatus->drive_state = Drive_Moving_AnyPoint;
+        pLECAP_100_DStatus->drive_stage = DriStage_Init;
         break;
     }
 
+    if (pLECAP_100_DStatus->home_successful == -1)
+    {
+        snprintf(log_msg, 60, "LECAP_100 needs back to HomePoint to Start");
+        RTC_LogMsg(Debug_Lev, log_msg);
+    }
+
     if (pLECAP_100_DStatus->drive_command != Drive_Command_Null)
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_DriveParas.drive_task_polling_ms);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, 5);
     return 0;
 }
 
@@ -503,18 +466,16 @@ char LECPA_Drive_InnerPositionUpdate(signed short *inner_cmd, signed short *inne
 char LECPA_100_DriveRountineTask()
 {
     char log_msg[60];
-    char entity_active;
-    //signed short tmp_position;
     usb_msg_lecpa_drive_cmd_reply_t drive_rountine_reply;
-    LECPA_Drive_Status_t *pLECAP_100_DStatus =&LECAP_100_DriveStatus;
+    LECPA_Drive_Status_t *pLECAP_100_DStatus = &LECAP_100_DriveStatus;
+    int position_comp;
+    static int output_dir, output_pulse;
+    OCx_src_t LECPA_100_Spd;
 
     if (SysTimer_IsTimerExpiered(RTC_CONTROL_LECPA_100_DRIVE_POLLING) == 0)
         return 0;
     drive_rountine_reply.cmd_id_rep = RespPositive_LECPA_100_Control;
     drive_rountine_reply.argv_1 = Dummy_00;
-    // snprintf(log_msg, 60, "LECPA_100_DriveTask");
-    // RTC_LogMsg(Debug_Lev, log_msg);
-            
     switch (pLECAP_100_DStatus->drive_command)
     {
     case Drive_Command_Null:
@@ -529,9 +490,9 @@ char LECPA_100_DriveRountineTask()
         {
             pLECAP_100_DStatus->servo_status = SERVO_ON;
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
-        }      
+        }
         break;
-        
+
     case Drive_Servo_Off:
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         drive_rountine_reply.sub_func = SubFunc_LECPA_Set_ServoOff_polling_reply;
@@ -541,86 +502,193 @@ char LECPA_100_DriveRountineTask()
             pLECAP_100_DStatus->home_successful = -1;
             pLECAP_100_DStatus->servo_status = SERVO_OFF;
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
-        }        
-        break;        
+        }
+        break;
 
     case Drive_Move_OrgPoint:
-        // SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        // drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_OrgPoint_polling_reply;
-        if (pLECAP_100_DStatus->busy_state == DriveBUSY_notSTART)
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_OrgPoint_polling_reply;
+        switch (pLECAP_100_DStatus->drive_stage)
         {
-            if (Is_LECPA_100_BUSY_On() == 0)
-                pLECAP_100_DStatus->busy_state = DriveBUSY_On;
-        }
-        else if (pLECAP_100_DStatus->busy_state == DriveBUSY_On)
-        {
-            if (Is_LECPA_100_BUSY_On() == -1)
-                pLECAP_100_DStatus->busy_state = DriveBUSY_Off;
-        }
+        case DriStage_Init:
+            Convert_LECPA_Drive_PositionCmd(pLECAP_100_DStatus->position_cmd, &output_dir, &output_pulse, &position_comp);
+            memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(position_comp), sizeof(position_comp));
+            pLECAP_100_DStatus->drive_stage = (position_comp != 0) ? DriStage_SetDir : DriStage_Complete;
+            Set_X_OCX_400rpm(&LECPA_100_Spd);
+            snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
+                     pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
 
-        if (pLECAP_100_DStatus->busy_state == DriveBUSY_Off)
-        {
+        case DriStage_SetDir:
+            WriteValue_ByEntityName(IO_X_DIRECTION_ENTITY, output_dir);
+            pLECAP_100_DStatus->drive_stage = DriStage_SetPulse;
+            snprintf(log_msg, 60, "Stage:DriStage_SetDir");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_SetPulse:
+            x_pulse_update_by_usb_msg(&LECPA_100_Spd, output_pulse);
+            pLECAP_100_DStatus->drive_stage = DriStage_waitBUSY_On;
+            break;
+
+        case DriStage_waitBUSY_On:
+            if (Is_LECPA_100_BUSY_On() ==0)
+            {
+                pLECAP_100_DStatus->drive_stage = DriStage_waitBUSY_Off;
+            }
+            snprintf(log_msg, 60, "Stage:DriStage_waitBUSY_On");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_waitBUSY_Off:
+            if (Is_LECPA_100_BUSY_On() == -1)
+            {
+                pLECAP_100_DStatus->drive_stage = DriStage_Complete;
+                LECPA_Drive_InnerPositionUpdate(&(pLECAP_100_DStatus->LECPA_inner_command), &(pLECAP_100_DStatus->LECPA_inner_position));
+            }
+            snprintf(log_msg, 60, "DriStage_waitBUSY_Off");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_Complete:
+            snprintf(log_msg, 60, "DriStage_Complete");
+            RTC_LogMsg(Debug_Lev, log_msg);
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
             pLECAP_100_DStatus->drive_state = Drive_Ready;
-            LECPA_Drive_InnerPositionUpdate(&(pLECAP_100_DStatus->LECPA_inner_command), &(pLECAP_100_DStatus->LECPA_inner_position));
+            break;
         }
-        else
-        {
-            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
-        }
-        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_OrgPoint_polling_reply;
 
+        if (pLECAP_100_DStatus->drive_state != Drive_Ready)
+        {
+            if (pLECAP_100_DStatus->drive_stage < DriStage_waitBUSY_On)
+                SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, 5);
+            else
+                SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+        }
         break;
 
     case Drive_Move_MinPoint:
-        if (pLECAP_100_DStatus->busy_state == DriveBUSY_notSTART)
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_MinPoint_polling_reply;
+        switch (pLECAP_100_DStatus->drive_stage)
         {
-            if (Is_LECPA_100_BUSY_On() == 0)
-                pLECAP_100_DStatus->busy_state = DriveBUSY_On;
-        }
-        else if (pLECAP_100_DStatus->busy_state == DriveBUSY_On)
-        {
-            if (Is_LECPA_100_BUSY_On() == -1)
-                pLECAP_100_DStatus->busy_state = DriveBUSY_Off;
-        }
+        case DriStage_Init:
+            Convert_LECPA_Drive_PositionCmd(pLECAP_100_DStatus->position_cmd, &output_dir, &output_pulse, &position_comp);
+            memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(position_comp), sizeof(position_comp));
+            pLECAP_100_DStatus->drive_stage = (position_comp != 0) ? DriStage_SetDir : DriStage_Complete;
+            Set_X_OCX_1000rpm(&LECPA_100_Spd);
+            snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
+                     pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
 
-        if (pLECAP_100_DStatus->busy_state == DriveBUSY_Off)
-        {
+        case DriStage_SetDir:
+            WriteValue_ByEntityName(IO_X_DIRECTION_ENTITY, output_dir);
+            pLECAP_100_DStatus->drive_stage = DriStage_SetPulse;
+            snprintf(log_msg, 60, "Stage:DriStage_SetDir");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_SetPulse:
+            x_pulse_update_by_usb_msg(&LECPA_100_Spd, output_pulse);
+            pLECAP_100_DStatus->drive_stage = DriStage_waitBUSY_On;
+            break;
+
+        case DriStage_waitBUSY_On:
+            if (Is_LECPA_100_BUSY_On() ==0)
+            {
+                pLECAP_100_DStatus->drive_stage = DriStage_waitBUSY_Off;
+            }
+            snprintf(log_msg, 60, "Stage:DriStage_waitBUSY_On");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_waitBUSY_Off:
+            if (Is_LECPA_100_BUSY_On() == -1)
+            {
+                pLECAP_100_DStatus->drive_stage = DriStage_Complete;
+                LECPA_Drive_InnerPositionUpdate(&(pLECAP_100_DStatus->LECPA_inner_command), &(pLECAP_100_DStatus->LECPA_inner_position));
+            }
+            snprintf(log_msg, 60, "DriStage_waitBUSY_Off");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_Complete:
+            snprintf(log_msg, 60, "DriStage_Complete");
+            RTC_LogMsg(Debug_Lev, log_msg);
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
             pLECAP_100_DStatus->drive_state = Drive_Ready;
-            LECPA_Drive_InnerPositionUpdate(&(pLECAP_100_DStatus->LECPA_inner_command), &(pLECAP_100_DStatus->LECPA_inner_position));
+            break;
         }
-        else
+
+        if (pLECAP_100_DStatus->drive_state != Drive_Ready)
         {
-            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+            if (pLECAP_100_DStatus->drive_stage < DriStage_waitBUSY_On)
+                SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, 5);
+            else
+                SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         }
-        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_MinPoint_polling_reply;
         break;
 
     case Drive_Move_MaxPoint:
-        if (pLECAP_100_DStatus->busy_state == DriveBUSY_notSTART)
+        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_MaxPoint_polling_reply;
+        switch (pLECAP_100_DStatus->drive_stage)
         {
-            if (Is_LECPA_100_BUSY_On() == 0)
-                pLECAP_100_DStatus->busy_state = DriveBUSY_On;
-        }
-        else if (pLECAP_100_DStatus->busy_state == DriveBUSY_On)
-        {
-            if (Is_LECPA_100_BUSY_On() == -1)
-                pLECAP_100_DStatus->busy_state = DriveBUSY_Off;
-        }
+        case DriStage_Init:
+            Convert_LECPA_Drive_PositionCmd(pLECAP_100_DStatus->position_cmd, &output_dir, &output_pulse, &position_comp);
+            memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(position_comp), sizeof(position_comp));
+            pLECAP_100_DStatus->drive_stage = (position_comp != 0) ? DriStage_SetDir : DriStage_Complete;
+            Set_X_OCX_3000rpm(&LECPA_100_Spd);
+            snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
+                     pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
 
-        if (pLECAP_100_DStatus->busy_state == DriveBUSY_Off)
-        {
+        case DriStage_SetDir:
+            WriteValue_ByEntityName(IO_X_DIRECTION_ENTITY, output_dir);
+            pLECAP_100_DStatus->drive_stage = DriStage_SetPulse;
+            snprintf(log_msg, 60, "Stage:DriStage_SetDir");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_SetPulse:
+            x_pulse_update_by_usb_msg(&LECPA_100_Spd, output_pulse);
+            pLECAP_100_DStatus->drive_stage = DriStage_waitBUSY_On;
+            break;
+
+        case DriStage_waitBUSY_On:
+            if (Is_LECPA_100_BUSY_On() ==0)
+            {
+                pLECAP_100_DStatus->drive_stage = DriStage_waitBUSY_Off;
+            }
+            snprintf(log_msg, 60, "Stage:DriStage_waitBUSY_On");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_waitBUSY_Off:
+            if (Is_LECPA_100_BUSY_On() == -1)
+            {
+                pLECAP_100_DStatus->drive_stage = DriStage_Complete;
+                LECPA_Drive_InnerPositionUpdate(&(pLECAP_100_DStatus->LECPA_inner_command), &(pLECAP_100_DStatus->LECPA_inner_position));
+            }
+            snprintf(log_msg, 60, "DriStage_waitBUSY_Off");
+            RTC_LogMsg(Debug_Lev, log_msg);
+            break;
+
+        case DriStage_Complete:
+            snprintf(log_msg, 60, "DriStage_Complete");
+            RTC_LogMsg(Debug_Lev, log_msg);
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
             pLECAP_100_DStatus->drive_state = Drive_Ready;
+            break;
+        }
 
-                LECPA_Drive_InnerPositionUpdate(&(pLECAP_100_DStatus->LECPA_inner_command), &(pLECAP_100_DStatus->LECPA_inner_position));
-        }
-        else
+        if (pLECAP_100_DStatus->drive_state != Drive_Ready)
         {
-            SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
+            if (pLECAP_100_DStatus->drive_stage < DriStage_waitBUSY_On)
+                SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, 5);
+            else
+                SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_LECPA_100_DRIVE_POLLING, LECAP_100_HomeParas.home_task_polling_ms);
         }
-        drive_rountine_reply.sub_func = SubFunc_LECPA_Mov_MaxPoint_polling_reply;
         break;
 
     case Drive_Move_AnyPoint:

@@ -11,6 +11,7 @@
 #define	_IO_CONTROL_H_
 #include <IO_Entity.h>
 #include "usb_app.h"
+#include "RTC_IOports.h"
 void IO_Init_Ports(void);                // Init the TRIS, ANSEL, LAT of all ports
 void IO_Init_PPS(void);                  // Re-map the IO Pins for the peripheral functions
 int IO_Get(IO_Port_Id_t IO_Id);          // Get the Pin status according to the IO_ID

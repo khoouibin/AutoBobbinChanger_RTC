@@ -7,11 +7,16 @@
 #include <outcompare.h>
 #include "Timers.h"
 #include "RTC_Log.h"
+#include "IO_Control.h"
+#include "IO_Entity.h"
 
 void OC2_SyncTmr3_Settings(enum Zrpm z_rpm);
 void OC1_OC2_Cascade_Settings(enum Zrpm z_rpm);
 char X_Jump_Settings();
 char X_Jump_Update_DelayCount();
+void Set_Z_PULSE_MA_Init();
+void Clr_Z_PulseCounter();
+void Inc_Z_PulseCounter();
 
 static int z_rpm_idx = 0;
 
@@ -19,10 +24,8 @@ static int z_rpm_idx = 0;
 // such that startup pwm after 1ms delay,
 // and update/off oc2 output after completed square waveform.
 static Z_Pulse_msg_update_t z_pulse_update_buffer = {0, 0, 0, {0, 0, 0, 0}};
-//static Z_Pulse_filter_t z_pulse_filter = {-1,Zpfilter_Off};
 static Z_Pulse_MA_t z_pulse_ma;
-static UINT_32 u32_z_pulse_count = 0;
-static UINT_32 u32_z_cycle_count = 0;
+static Z_Pulse_CycleCounter_t z_pulse_cyclecounter = {0, 0};
 
 static X_Pulse_msg_update_t x_pulse_update_buffer = {0, 0, 0, 0, 0};
 static X_Pulse_Jump_Para_t x_pulse_jump_para;
@@ -127,17 +130,47 @@ void z_pulse_ma_fillup(UINT_32 pulse_count)
     }
 }
 
-void z_pulse_ma_init()
+void Clr_Z_PulseCounter()
 {
-    z_pulse_ma_fillup((UINT_32) Z_SPR1600_5RPM);
-    z_pulse_ma.state=FilterOff;
+    z_pulse_cyclecounter.z_spr_counter = 0;
+    z_pulse_cyclecounter.z_cycle_counter = 0;
+}
+
+void Inc_Z_PulseCounter()
+{
+    usb_msg_z_pulse_gen_reply_t z_pulse_gen_reply;
+    Z_Pulse_CycleCounter_t *pZPCC = &z_pulse_cyclecounter;
+
+    pZPCC->z_spr_counter += 1;
+    if (pZPCC->z_spr_counter >= Z_SPR1600_CYCLE_COUNTER_C)
+    {
+        pZPCC->z_spr_counter = 0;
+        pZPCC->z_cycle_counter += 1;
+
+        z_pulse_gen_reply.cmd_id_rep = RespPositive_Z_PulseGen;
+        z_pulse_gen_reply.sub_func = SubFunc_z_pulse_turns_reply;
+        z_pulse_gen_reply.turns = 0xffff & ((unsigned short)pZPCC->z_cycle_counter);
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&z_pulse_gen_reply, 4);
+    }
+}
+
+void Set_Z_PULSE_Vars_Init()
+{
+    Set_Z_PULSE_MA_Init();
+    Clr_Z_PulseCounter();
+}
+
+void Set_Z_PULSE_MA_Init()
+{
+    z_pulse_ma_fillup((UINT_32)Z_SPR1600_5RPM);
+    z_pulse_ma.state = FilterOff;
     z_pulse_ma.enable_off = 0;
 }
 
 void z_pulse_ma_debug()
 {
     char log_msg[60];
-    snprintf(log_msg, 60, "z_pulse_ma_debug mabulk:%llu",z_pulse_ma.ma_bulk);
+    snprintf(log_msg, 60, "z_pulse_ma_debug mabulk:%llu", z_pulse_ma.ma_bulk);
     RTC_LogMsg(Debug_Lev, log_msg);
 }
 
@@ -179,26 +212,6 @@ void z_pulse_gen_lookup_table(enum Zrpm rpm_value)
         OC2_SyncTmr3_Settings(z_rpm_idx);
 }
 
-void z_pulse_counter_inc()
-{
-    usb_msg_z_pulse_gen_reply_t z_pulse_gen_reply;
-
-    // char log_msg[60];
-    u32_z_pulse_count += 1;
-    if (u32_z_pulse_count >= Z_SPR1600)
-    {
-        u32_z_pulse_count = 0;
-        u32_z_cycle_count += 1;
-
-        z_pulse_gen_reply.cmd_id_rep = RespPositive_Z_PulseGen;
-        z_pulse_gen_reply.sub_func = SubFunc_z_pulse_turns_reply;
-        z_pulse_gen_reply.turns = 0xffff & ((unsigned short)u32_z_cycle_count);
-        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&z_pulse_gen_reply, 4);
-        // snprintf(log_msg, 60, "z_cycle: %ld",u32_z_cycle_count);
-        // RTC_LogMsg(Debug_Lev, log_msg);
-    }
-}
-
 void __attribute__((interrupt, no_auto_psv)) _OC2Interrupt(void)
 {
     IFS0bits.OC2IF = 0;
@@ -212,8 +225,7 @@ void __attribute__((interrupt, no_auto_psv)) _OC2Interrupt(void)
         pZpma->enable_off = 0;
         pZpma->state = FilterOff;
         pZub->z_pulse_update_turn_off = 0;
-        u32_z_cycle_count = 0;
-        u32_z_pulse_count = 0;
+        Clr_Z_PulseCounter();
         z_pulse_ma_fillup((UINT_32)Z_SPR1600_5RPM);
         return;
     }
@@ -226,7 +238,7 @@ void __attribute__((interrupt, no_auto_psv)) _OC2Interrupt(void)
                              u32_tmp2.u16[1],
                              u32_tmp2.u16[0]);
     }
-    z_pulse_counter_inc();
+    Inc_Z_PulseCounter();
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void)
@@ -243,8 +255,7 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void)
         pZpma->enable_off = 0;
         pZpma->state = FilterOff;
         pZub->z_pulse_update_turn_off = 0;
-        u32_z_cycle_count = 0;
-        u32_z_pulse_count = 0;
+        Clr_Z_PulseCounter();
         z_pulse_ma_fillup((UINT_32)Z_SPR1600_5RPM);
         return;
     }
@@ -257,7 +268,7 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt(void)
                              u32_tmp2.u16[1],
                              u32_tmp2.u16[0]);
     }
-    z_pulse_counter_inc();
+    Inc_Z_PulseCounter();
 }
 
 // date: 2024, 0926.
@@ -326,10 +337,11 @@ char z_pulse_update_by_usb_msg(unsigned int w, unsigned int x, unsigned int y, u
     // z_pulse_update_buffer.z_pulse_update.dutyon_hiword = y;
     // z_pulse_update_buffer.z_pulse_update.dutyon_loword = z;
     Z_Pulse_MA_t *pZpma = &z_pulse_ma;
-    pZpma->ma_input.u16[1]=w;
-    pZpma->ma_input.u16[0]=x;
-    if (pZpma->state==FilterOff)
+    pZpma->ma_input.u16[1] = w;
+    pZpma->ma_input.u16[0] = x;
+    if (pZpma->state == FilterOff)
     {
+        WriteValue_ByEntityName(IO_Z_DIRECTION_ENTITY, 1);
         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_Z_PULSE_FILTER, 50);
         pZpma->state = FirstRunning;
     }
@@ -353,7 +365,7 @@ char z_pulse_startup_by_tmr()
     }
     return 0;
 }
-// #define C_period_dummy 0xffff 
+// #define C_period_dummy 0xffff
 // #define Period_500RPM 45000
 // #define Z_SPR1600_600RPM 3750
 // #define Z_SPR1600_200RPM 11250
@@ -370,19 +382,7 @@ char Is_z_pulse_FilterTaskRunning()
 u32_union_t z_pulse_MA_cal(u32_union_t input)
 {
     Z_Pulse_MA_t *pZpma = &z_pulse_ma;
-
-    // u32_union_t *p_z_pulse_ma = &z_pulse_ma.ma_buf[z_pulse_ma.ma_idx];
     long long bulk_tmp;
-    // z_pulse_ma.ma_bulk += input.u32;
-    // z_pulse_ma.ma_bulk -= p_z_pulse_ma->u32;
-    // bulk_tmp = z_pulse_ma.ma_bulk;
-    // bulk_tmp>>=6;
-    // z_pulse_ma.ma_output.u32 = (UINT_32)bulk_tmp;
-    // p_z_pulse_ma->u32 = input.u32;
-    // z_pulse_ma.ma_idx += 1;
-    // z_pulse_ma.ma_idx &= 0x3f;
-    // return z_pulse_ma.ma_output;
-
     pZpma->ma_bulk += input.u32;
     pZpma->ma_bulk -= pZpma->ma_buf[pZpma->ma_idx].u32;
     bulk_tmp = pZpma->ma_bulk >> 6;
@@ -395,7 +395,7 @@ u32_union_t z_pulse_MA_cal(u32_union_t input)
 
 char z_pulse_MA_RountineTask()
 {
-    char log_msg[60];
+    //char log_msg[60];
     Z_Pulse_MA_t *pZpma = &z_pulse_ma;
     Z_Pulse_msg_update_t *pZub = &z_pulse_update_buffer;
     u32_union_t ma_out_tmp, u32_tmp;
@@ -418,8 +418,8 @@ char z_pulse_MA_RountineTask()
                              ma_out_tmp.u16[0],
                              u32_tmp.u16[1],
                              u32_tmp.u16[0]);
-        snprintf(log_msg, 60, "Z-ma(first-run):%lu", pZpma->ma_output.u32);
-        RTC_LogMsg(Debug_Lev, log_msg);
+        //snprintf(log_msg, 60, "Z-ma(first-run):%lu", pZpma->ma_output.u32);
+        //RTC_LogMsg(Debug_Lev, log_msg);
 
         pZpma->state = ContinueRunning;
     }
@@ -429,164 +429,28 @@ char z_pulse_MA_RountineTask()
         {
             u32_tmp.u32 = (UINT_32)Z_SPR1600_180RPM;
             ma_out_tmp = z_pulse_MA_cal(u32_tmp);
-            snprintf(log_msg, 60, "Z-ma(Z_SPR1600_180RPM):%lu", pZpma->ma_output.u32);
-            RTC_LogMsg(Debug_Lev, log_msg);
+            //snprintf(log_msg, 60, "Z-ma(Z_SPR1600_180RPM):%lu", pZpma->ma_output.u32);
+            //RTC_LogMsg(Debug_Lev, log_msg);
 
             if ((pZpma->ma_output.u32) > Z_SPR1600_200RPM)
             {
                 pZpma->enable_off = 1;
-                snprintf(log_msg, 60, "Z-ma(ready_off):%lu", pZpma->ma_output.u32);
-                RTC_LogMsg(Debug_Lev, log_msg);
+                //snprintf(log_msg, 60, "Z-ma(ready_off):%lu", pZpma->ma_output.u32);
+                //RTC_LogMsg(Debug_Lev, log_msg);
             }
         }
         else
         {
             ma_out_tmp = z_pulse_MA_cal(pZpma->ma_input);
-            snprintf(log_msg, 60, "Z-ma(running):%lu", pZpma->ma_output.u32);
-            RTC_LogMsg(Debug_Lev, log_msg);
+            //snprintf(log_msg, 60, "Z-ma(running):%lu", pZpma->ma_output.u32);
+            //RTC_LogMsg(Debug_Lev, log_msg);
         }
     }
 
     if (pZpma->state == ContinueRunning)
-        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_Z_PULSE_FILTER, 50);
+        SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_Z_PULSE_FILTER, 10);
     return 0;
 }
-
-// char z_pulse_FilterRountineTask()
-// {
-//     Z_Pulse_filter_t *pZPF = &z_pulse_filter;
-//     OCx_pulse_count_type_t width_tmp1,width_tmp2;
-//     char log_msg[60];
-//     if (SysTimer_IsTimerExpiered(RTC_CONTROL_Z_PULSE_FILTER) == 0)
-//         return 0;
-//     width_tmp1.u16[1] = pZPF->z_pulse_input.period_hiword;
-//     width_tmp1.u16[0] = pZPF->z_pulse_input.period_loword;
-
-//     if (z_pulse_update_buffer.z_pulse_gen_enable == 0)
-//     {
-
-//         if (width_tmp1.u32 > Z_SPR1600_200RPM)
-//         {
-//             pZPF->z_pulse_output.period_hiword = width_tmp1.u16[1];
-//             pZPF->z_pulse_output.period_loword = width_tmp1.u16[0];
-//             width_tmp1.u32 >>= 1;
-//             pZPF->z_pulse_output.dutyon_hiword = width_tmp1.u16[1];
-//             pZPF->z_pulse_output.dutyon_loword = width_tmp1.u16[0];
-
-//             pZPF->z_pulse_backup.period_hiword = width_tmp1.u16[1];
-//             pZPF->z_pulse_backup.period_loword = width_tmp1.u16[0];
-
-//             z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
-//                                  pZPF->z_pulse_output.period_loword,
-//                                  pZPF->z_pulse_output.dutyon_hiword,
-//                                  pZPF->z_pulse_output.dutyon_loword);
-
-//             // snprintf(log_msg, 60, "Ztask(1)- %d,%d,%d,%d,",
-//             //          pZPF->z_pulse_output.period_hiword,
-//             //          pZPF->z_pulse_output.period_loword,
-//             //          pZPF->z_pulse_output.dutyon_hiword,
-//             //          pZPF->z_pulse_output.dutyon_loword);
-//             // RTC_LogMsg(Debug_Lev, log_msg);
-//         }
-//         else
-//         {
-//             width_tmp1.u32 = Z_SPR1600_200RPM;
-//             pZPF->z_pulse_output.period_hiword = width_tmp1.u16[1];
-//             pZPF->z_pulse_output.period_loword = width_tmp1.u16[0];
-//             width_tmp1.u32 >>= 1;
-//             pZPF->z_pulse_output.dutyon_hiword = width_tmp1.u16[1];
-//             pZPF->z_pulse_output.dutyon_loword = width_tmp1.u16[0];
-//             pZPF->z_pulse_backup.period_hiword = width_tmp1.u16[1];
-//             pZPF->z_pulse_backup.period_loword = width_tmp1.u16[0];
-
-//             z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
-//                                  pZPF->z_pulse_output.period_loword,
-//                                  pZPF->z_pulse_output.dutyon_hiword,
-//                                  pZPF->z_pulse_output.dutyon_loword);
-//             // snprintf(log_msg, 60, "Ztask(2)- %d,%d,%d,%d,",
-//             //          pZPF->z_pulse_output.period_hiword,
-//             //          pZPF->z_pulse_output.period_loword,
-//             //          pZPF->z_pulse_output.dutyon_hiword,
-//             //          pZPF->z_pulse_output.dutyon_loword);
-//             // RTC_LogMsg(Debug_Lev, log_msg);
-//         }
-//     }
-//     else
-//     {
-//         width_tmp2.u16[1] = pZPF->z_pulse_output.period_hiword;
-//         width_tmp2.u16[0] = pZPF->z_pulse_output.period_loword;
-        
-//         if (z_pulse_update_buffer.z_pulse_update_turn_off == 1)
-//         {
-//             width_tmp2.u32 += Z_SPR1600_DEACCEL;
-//             if (width_tmp2.u32 > Z_SPR1600_200RPM)
-//             {
-//                 pZPF->filter_ready_off = 1; 
-//                 snprintf(log_msg, 60, "Ztask(off)");
-//                 RTC_LogMsg(Debug_Lev, log_msg);
-//             }
-//             else
-//             {
-//                 pZPF->filter_ready_off = 0;
-
-//                 pZPF->z_pulse_output.period_hiword = width_tmp2.u16[1];
-//                 pZPF->z_pulse_output.period_loword = width_tmp2.u16[0];
-//                 width_tmp2.u32 >>= 1;
-//                 pZPF->z_pulse_output.dutyon_hiword = width_tmp2.u16[1];
-//                 pZPF->z_pulse_output.dutyon_loword = width_tmp2.u16[0];
-//                 z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
-//                                      pZPF->z_pulse_output.period_loword,
-//                                      pZPF->z_pulse_output.dutyon_hiword,
-//                                      pZPF->z_pulse_output.dutyon_loword);
-//                 // snprintf(log_msg, 60, "Ztask(prepare-off) %d,%d,%d,%d,",
-//                 //          pZPF->z_pulse_output.period_hiword,
-//                 //          pZPF->z_pulse_output.period_loword,
-//                 //          pZPF->z_pulse_output.dutyon_hiword,
-//                 //          pZPF->z_pulse_output.dutyon_loword);
-//                 // RTC_LogMsg(Debug_Lev, log_msg);
-//             }
-//         }
-//         else
-//         {
-//             if (width_tmp1.u32 < width_tmp2.u32) // input higher than output
-//             {
-//                 width_tmp2.u32 -= Z_SPR1600_ACCEL;
-//                 if (width_tmp2.u32 < width_tmp1.u32)
-//                     width_tmp2.u32 = width_tmp1.u32;
-//             }
-//             else
-//             {
-//                 width_tmp2.u32 += Z_SPR1600_DEACCEL;
-//                 if (width_tmp2.u32 > width_tmp1.u32)
-//                     width_tmp2.u32 = width_tmp1.u32;
-//                 if ((width_tmp1.u32 > Z_SPR1600_200RPM) && (width_tmp2.u32 > Z_SPR1600_200RPM))
-//                 {
-//                     width_tmp2.u32 = width_tmp1.u32;
-//                 }
-//             }
-//             pZPF->z_pulse_output.period_hiword =width_tmp2.u16[1];
-//             pZPF->z_pulse_output.period_loword =width_tmp2.u16[0];
-//             width_tmp2.u32 >>= 1;
-//             pZPF->z_pulse_output.dutyon_hiword = width_tmp2.u16[1];
-//             pZPF->z_pulse_output.dutyon_loword = width_tmp2.u16[0];
-//             z_pulse_gen_by_value(pZPF->z_pulse_output.period_hiword,
-//                                  pZPF->z_pulse_output.period_loword,
-//                                  pZPF->z_pulse_output.dutyon_hiword,
-//                                  pZPF->z_pulse_output.dutyon_loword);
-//             // snprintf(log_msg, 60, "Ztask(3)- %d,%d,%d,%d,",
-//             //          pZPF->z_pulse_output.period_hiword,
-//             //          pZPF->z_pulse_output.period_loword,
-//             //          pZPF->z_pulse_output.dutyon_hiword,
-//             //          pZPF->z_pulse_output.dutyon_loword);
-//             // RTC_LogMsg(Debug_Lev, log_msg);
-//         }
-//     }
-
-
-//     if( pZPF->z_pulse_filter_state == Zpfilter_ContinueRunning)
-//         SysTimer_SetTimerInMiliSeconds(RTC_CONTROL_Z_PULSE_FILTER,50); 
-//     return 0;
-// }
 
 void OC4_SyncTmr4_Settings(OCx_sequence_t x_oc_value);
 void OC3_OC4_Cascade_Settings(OCx_sequence_t x_oc_value);
@@ -735,8 +599,6 @@ char X_Jump_Settings()
     x_pulse_jump_para.steps_counter = 0;
     return 0;
 }
-
-
 
 char X_Jump_Update_DelayCount()
 {

@@ -10,7 +10,6 @@
 #include <pps.h>
 #include "Compiler.h"
 #include "RTC_IODef.h"
-#include "RTC_IOports.h"
 #include "IO_Control.h"
 #include "IO_Entity.h"
 

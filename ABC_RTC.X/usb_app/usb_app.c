@@ -5,7 +5,6 @@
 #include "usb_app.h"
 #include "RTC_Log.h"
 #include "Ons_General.h"
-#include "RTC_IOports.h"
 #include "IO_Control.h"
 #include "IO_Entity.h"
 #include "RTC_Control.h"

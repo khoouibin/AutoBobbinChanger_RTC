@@ -13,7 +13,7 @@ import math
 def main():
 
     # Z rpm table generator
-    z_rpm_list = list(range(5,25,5))
+    z_rpm_list = list(range(50,3000,5))
     print('z_rpm_list:',z_rpm_list)
     z_rpm_pulse_prescale_1 = []
     z_rpm_dict = {}
@@ -385,9 +385,9 @@ def pulse_calculation4(start_rpm,end_rpm,spr):
         print(log)
 
 if __name__ == '__main__':
-    #main()
+    main()
     #pulse_calculation(3000,1600)
-    pulse_calculation2(200,600,1600)
+    #pulse_calculation2(200,600,1600)
     #pulse_calculation2_1(100,3000,1600)
     #pulse_calculation3(3000,10,1600)
     #pulse_calculation3(500,100,1600)

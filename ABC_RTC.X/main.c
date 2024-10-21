@@ -10,7 +10,6 @@
 #include "Timers.h"
 #include "GenericTypeDefs.h"
 #include "Ons_General.h"
-#include "RTC_IOports.h"
 #include "IO_Control.h"
 #include "IO_Entity.h"
 
@@ -114,10 +113,10 @@ int uart2RX_flag = 0;
 int main(void)
 {
     RTC_Control_State_t Is_Exit_RTC_Control = RTC_CONTROL_STATE_UNDEFINE;
-    z_pulse_ma_init();
     Initialize_System();
     Initialize_Communication_Modules();
     Set_LECPA_100_Init();
+    Set_Z_PULSE_Vars_Init();
 
     Is_Exit_RTC_Control = RTC_Control_Main();
     if (Is_Exit_RTC_Control == RTC_CONTROL_RESET)
