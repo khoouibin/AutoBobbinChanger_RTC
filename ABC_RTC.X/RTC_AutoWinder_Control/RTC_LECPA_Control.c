@@ -480,7 +480,7 @@ char LECPA_100_DriveRountineTask()
     if (SysTimer_IsTimerExpiered(RTC_CONTROL_LECPA_100_DRIVE_POLLING) == 0)
         return 0;
     drive_rountine_reply.cmd_id_rep = RespPositive_LECPA_100_Control;
-    drive_rountine_reply.argv_1 = Dummy_00;
+    drive_rountine_reply.drive_stage = Dummy_00;
     switch (pLECAP_100_DStatus->drive_command)
     {
     case Drive_Command_Null:
@@ -796,11 +796,18 @@ char LECPA_100_DriveRountineTask()
         break;
     }
 
-    //dricmd_tmp = Drive_Command_Null;
-    //static LECPA_Drive_Stage_t dristg_tmp = DriStage_Null;
-    if (dricmd_tmp ^ pLECAP_100_DStatus->drive_command == 1)
+    if (dricmd_tmp != pLECAP_100_DStatus->drive_command)
     {
         drive_rountine_reply.drive_state = Get_LECPA_100_DriveState();
+        drive_rountine_reply.drive_stage = pLECAP_100_DStatus->drive_stage;
+        dricmd_tmp = pLECAP_100_DStatus->drive_command;
+        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
+    }
+    else if (dristg_tmp != pLECAP_100_DStatus->drive_stage)
+    {
+        drive_rountine_reply.drive_state = Get_LECPA_100_DriveState();
+        drive_rountine_reply.drive_stage = pLECAP_100_DStatus->drive_stage;
+        dristg_tmp = pLECAP_100_DStatus->drive_stage;
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
     }
 

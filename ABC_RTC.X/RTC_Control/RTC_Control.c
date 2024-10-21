@@ -501,7 +501,7 @@ void RTC_Control_Handler_Ready(CommonMsg_Actions_t cmd, USB_Task_msg_t *task_msg
         lecpa_drive_reply.cmd_id_rep = RespPositive_LECPA_100_Control;
         lecpa_drive_reply.sub_func = p_lecpa_drive_task->sub_func;
         lecpa_drive_reply.drive_state = Get_LECPA_100_DriveState();
-        lecpa_drive_reply.argv_1 = Dummy_00;
+        lecpa_drive_reply.drive_stage = Dummy_00;
         USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&lecpa_drive_reply, 4);
         break;
 
