@@ -468,7 +468,7 @@ char LECPA_Drive_InnerPositionUpdate(signed short *inner_cmd, signed short *inne
 
 char LECPA_100_DriveRountineTask()
 {
-    char log_msg[60];
+    //char log_msg[60];
     usb_msg_lecpa_drive_cmd_reply_t drive_rountine_reply;
     LECPA_Drive_Status_t *pLECAP_100_DStatus = &LECAP_100_DriveStatus;
     int position_comp;
@@ -477,6 +477,7 @@ char LECPA_100_DriveRountineTask()
     static LECPA_Drive_Command_t dricmd_tmp = Drive_Command_Null;
     static LECPA_Drive_Stage_t dristg_tmp = DriStage_Null;
     static unsigned char reply_tmr_counter = 0;
+    char msg_reply = 0;
 
     if (SysTimer_IsTimerExpiered(RTC_CONTROL_LECPA_100_DRIVE_POLLING) == 0)
         return 0;
@@ -523,9 +524,10 @@ char LECPA_100_DriveRountineTask()
             Convert_LECPA_Drive_PositionCmd(pLECAP_100_DStatus->position_cmd, &output_dir, &output_pulse, &position_comp);
             memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(position_comp), sizeof(position_comp));
             pLECAP_100_DStatus->drive_stage = (position_comp != 0) ? DriStage_SetDir : DriStage_Complete;
-            snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
-                     pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
-            RTC_LogMsg(Debug_Lev, log_msg);
+      
+            // snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
+            //          pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
+            // RTC_LogMsg(Debug_Lev, log_msg);
             break;
 
         case DriStage_SetDir:
@@ -555,6 +557,7 @@ char LECPA_100_DriveRountineTask()
         case DriStage_Complete:
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
             pLECAP_100_DStatus->drive_state = Drive_Ready;
+            msg_reply = 1;
             break;
         }
 
@@ -584,9 +587,9 @@ char LECPA_100_DriveRountineTask()
             Convert_LECPA_Drive_PositionCmd(pLECAP_100_DStatus->position_cmd, &output_dir, &output_pulse, &position_comp);
             memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(position_comp), sizeof(position_comp));
             pLECAP_100_DStatus->drive_stage = (position_comp != 0) ? DriStage_SetDir : DriStage_Complete;
-            snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
-                     pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
-            RTC_LogMsg(Debug_Lev, log_msg);
+            // snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
+            //          pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
+            // RTC_LogMsg(Debug_Lev, log_msg);
             break;
 
         case DriStage_SetDir:
@@ -616,6 +619,7 @@ char LECPA_100_DriveRountineTask()
         case DriStage_Complete:
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
             pLECAP_100_DStatus->drive_state = Drive_Ready;
+            msg_reply = 1;
             break;
         }
 
@@ -645,9 +649,10 @@ char LECPA_100_DriveRountineTask()
             Convert_LECPA_Drive_PositionCmd(pLECAP_100_DStatus->position_cmd, &output_dir, &output_pulse, &position_comp);
             memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(position_comp), sizeof(position_comp));
             pLECAP_100_DStatus->drive_stage = (position_comp != 0) ? DriStage_SetDir : DriStage_Complete;
-            snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
-                     pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
-            RTC_LogMsg(Debug_Lev, log_msg);
+            // snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
+            //          pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
+            // RTC_LogMsg(Debug_Lev, log_msg);
+
             break;
 
         case DriStage_SetDir:
@@ -677,6 +682,7 @@ char LECPA_100_DriveRountineTask()
         case DriStage_Complete:
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
             pLECAP_100_DStatus->drive_state = Drive_Ready;
+            msg_reply = 1;
             break;
         }
 
@@ -706,10 +712,9 @@ char LECPA_100_DriveRountineTask()
             Convert_LECPA_Drive_PositionCmd(pLECAP_100_DStatus->position_cmd, &output_dir, &output_pulse, &position_comp);
             memcpy(&(pLECAP_100_DStatus->LECPA_inner_command), &(position_comp), sizeof(position_comp));
             pLECAP_100_DStatus->drive_stage = (position_comp != 0) ? DriStage_SetDir : DriStage_Complete;
-          
-            snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
-                     pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
-            RTC_LogMsg(Debug_Lev, log_msg);
+            // snprintf(log_msg, 60, "p_cmd:%d,dir:%d,pulse:%d,comp:%d",
+            //          pLECAP_100_DStatus->position_cmd, output_dir, output_pulse, position_comp);
+            // RTC_LogMsg(Debug_Lev, log_msg);
             break;
 
         case DriStage_SetDir:
@@ -739,6 +744,7 @@ char LECPA_100_DriveRountineTask()
         case DriStage_Complete:
             pLECAP_100_DStatus->drive_command = Drive_Command_Null;
             pLECAP_100_DStatus->drive_state = Drive_Ready;
+            msg_reply = 1;
             break;
         }
 
@@ -765,19 +771,21 @@ char LECPA_100_DriveRountineTask()
     if (dricmd_tmp != pLECAP_100_DStatus->drive_command)
     {
         reply_tmr_counter = 0;
-        dricmd_tmp = pLECAP_100_DStatus->drive_command;        
-        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
+        dricmd_tmp = pLECAP_100_DStatus->drive_command;
+        if (msg_reply == 1)     
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
     }
     else if (dristg_tmp != pLECAP_100_DStatus->drive_stage)
     {
         reply_tmr_counter = 0;
         dristg_tmp = pLECAP_100_DStatus->drive_stage;
-        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
+        if (msg_reply == 1)    
+            USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
     }
-    else if (reply_tmr_counter == 0)
-    {
-        USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
-    }
+    // else if (reply_tmr_counter == 0)
+    // {
+    //     USB_Msg_To_TxBulkBuffer((ptr_usb_msg_u8)&drive_rountine_reply, sizeof(drive_rountine_reply));
+    // }
 
     return 0;
 }

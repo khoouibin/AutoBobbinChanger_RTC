@@ -602,8 +602,6 @@ char X_Jump_Settings()
 
 char X_Jump_Update_DelayCount()
 {
-    char log_msg[60];
-
     int period_hiword, period_loword, dutyon_hiword, dutyon_loword;
     int tb_idx;
     switch (x_pulse_jump_para.state)
@@ -654,8 +652,8 @@ char X_Jump_Update_DelayCount()
     case JmpTerminate:
         x_pulse_update_buffer.x_pulse_update_mutex = 0;
         x_pulse_gen_off();
-        snprintf(log_msg, 60, "x-JmpTerminate");
-        RTC_LogMsg(Debug_Lev, log_msg);
+        // snprintf(log_msg, 60, "x-JmpTerminate");
+        // RTC_LogMsg(Debug_Lev, log_msg);
         break;
     }
 
